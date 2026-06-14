@@ -6,14 +6,15 @@ import { FighterData } from '../fighters/FighterData';
 // maxFallSpeed  terminal velocity (pixels/sec downward)
 // airControl    0–1 fraction of walkSpeed while airborne
 //
-// Attack frame data (all values in 60fps frames):
-//   startup  = wind-up before hitbox appears  (lower = faster punish)
-//   active   = frames the hitbox is live      (higher = easier to hit)
-//   recovery = cool-down after active ends    (higher = more punishable)
+// Sprite sheets (all in public/assets/fighters/nahorai/):
+//   nahorai_idle.png  — 1774×887,  6 frames × 1 row,  frameW 295 frameH 883 margin 2
+//   nahorai_walk.png  — 2172×724,  6 frames × 1 row,  frameW 362 frameH 724
+//   nahorai_jump.png  — 1536×1024, 4 frames × 2 rows, frameW 384 frameH 512
+//     row 0 (frames 0-3): jump startup / rising / peak
+//     row 1 (frames 4-7): falling / descent / landing impact
 //
-// hitboxOffset: { x, y, w, h }
-//   x = horizontal distance from fighter origin (in facing direction)
-//   y = vertical offset from feet (negative = upward)
+// spriteDisplayHeight controls how tall the sprite renders in game pixels.
+// Hurtbox and hitbox positions are independent of sprite visuals.
 // ──────────────────────────────────────────────────────────────────────────────
 
 export const nahoraiData: FighterData = {
@@ -57,18 +58,21 @@ export const nahoraiData: FighterData = {
       hitboxOffset: { x: 36, y: -66, w: 88, h: 56 },
     },
   },
-  // Sprite key prefix.  Fighter looks for textures named `${spriteKey}_idle`,
-  // `${spriteKey}_walk`, etc.  Set to 'nahorai' so the idle sheet at
-  // public/assets/fighters/nahorai/nahorai_idle.png is found automatically.
   spriteKey: 'nahorai',
+  spriteDisplayHeight: 120,
   animFrames: {
-    idle:         { start: 0,  end: 3,  frameRate: 8,  repeat: -1 },
-    walk:         { start: 4,  end: 9,  frameRate: 12, repeat: -1 },
-    jump:         { start: 10, end: 12, frameRate: 8,  repeat: 0  },
-    light_attack: { start: 13, end: 15, frameRate: 18, repeat: 0  },
-    heavy_attack: { start: 16, end: 20, frameRate: 12, repeat: 0  },
-    block:        { start: 21, end: 21, frameRate: 8,  repeat: -1 },
-    hitstun:      { start: 22, end: 23, frameRate: 10, repeat: 0  },
-    knockdown:    { start: 24, end: 26, frameRate: 8,  repeat: 0  },
+    // Idle — 6 frames looping
+    idle:         { start: 0, end: 5, frameRate: 8,  repeat: -1 },
+    // Walk — 6 frames looping
+    walk:         { start: 0, end: 5, frameRate: 10, repeat: -1 },
+    // Jump — 8 frames in two logical halves (both use nahorai_jump sheet)
+    jump_rise:    { start: 0, end: 3, frameRate: 10, repeat: 0  }, // frames 0-3: takeoff → peak
+    jump_fall:    { start: 4, end: 7, frameRate: 10, repeat: 0  }, // frames 4-7: fall → landing
+    // Attack, block, hitstun, knockdown — placeholder indices for when sheets arrive
+    light_attack: { start: 0, end: 2, frameRate: 18, repeat: 0  },
+    heavy_attack: { start: 0, end: 4, frameRate: 12, repeat: 0  },
+    block:        { start: 0, end: 0, frameRate: 8,  repeat: -1 },
+    hitstun:      { start: 0, end: 1, frameRate: 10, repeat: 0  },
+    knockdown:    { start: 0, end: 2, frameRate: 8,  repeat: 0  },
   },
 };

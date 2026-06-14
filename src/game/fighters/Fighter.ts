@@ -51,11 +51,11 @@ export class Fighter {
   hurtbox: Hurtbox;
 
   private rect: Phaser.GameObjects.Rectangle;
-  // Optional sprite layer — activated automatically once the texture is loaded.
-  // Currently only the idle animation is supported.  Add more anim keys here
-  // (walk, attack, jump …) as sprite sheets become available.
+  // Optional sprite layer — activated automatically when textures are loaded.
+  // Supported states: idle, walk, jump (rise + fall).
+  // Other states (attack, block, hitstun, knockdown) still use the rectangle.
   private sprite?: Phaser.GameObjects.Sprite;
-  private hasIdleSprite = false;
+  private spriteAnims = new Set<string>(); // which Phaser anim keys are available
   private scene: Phaser.Scene;
 
   private stateTimer = 0;
@@ -95,35 +95,66 @@ export class Fighter {
   }
 
   // ── Sprite layer ────────────────────────────────────────────────────────────
-  // Called once from the constructor.  If the idle texture was loaded in
-  // PreloadScene the fighter switches to sprite-based rendering for the idle
-  // state; all other states keep using the rectangle placeholder until their
-  // own sprite sheets are added.
-  // To add the next animation (e.g. walk):
-  //   1. Load the sheet in PreloadScene: this.load.spritesheet('nahorai_walk', ...)
-  //   2. Add the anim key to trySetupSprite and the state check in syncVisuals.
+  // Registers all available animations and creates the sprite game object.
+  // Called once from the constructor.  Safe to call even if no textures are
+  // loaded — the fighter stays a rectangle in that case.
   private trySetupSprite(): void {
-    if (!this.data.spriteKey) return;
+    const k = this.data.spriteKey;
+    const af = this.data.animFrames;
+    if (!k || !af) return;
 
-    const idleKey = `${this.data.spriteKey}_idle`;
-    if (!this.scene.textures.exists(idleKey)) return;
+    const register = (texKey: string, animKey: string, afKey: string): boolean => {
+      const frames = af[afKey];
+      if (!frames) return false;
+      if (!this.scene.textures.exists(texKey)) return false;
+      if (!this.scene.anims.exists(animKey)) {
+        this.scene.anims.create({
+          key: animKey,
+          frames: this.scene.anims.generateFrameNumbers(texKey, {
+            start: frames.start,
+            end:   frames.end,
+          }),
+          frameRate: frames.frameRate,
+          repeat:    frames.repeat,
+        });
+      }
+      this.spriteAnims.add(animKey);
+      return true;
+    };
 
-    this.sprite = this.scene.add.sprite(this.x, this.y, idleKey)
+    // Register all available animation sheets
+    register(`${k}_idle`, `${k}_idle`, 'idle');
+    register(`${k}_walk`, `${k}_walk`, 'walk');
+    register(`${k}_jump`, `${k}_jump_rise`, 'jump_rise');
+    register(`${k}_jump`, `${k}_jump_fall`, 'jump_fall');
+
+    if (this.spriteAnims.size === 0) return;
+
+    // Pick any available texture to instantiate the sprite
+    const firstTex =
+      this.scene.textures.exists(`${k}_idle`) ? `${k}_idle` :
+      this.scene.textures.exists(`${k}_walk`) ? `${k}_walk` :
+      `${k}_jump`;
+
+    this.sprite = this.scene.add.sprite(this.x, this.y, firstTex)
       .setOrigin(0.5, 1)
-      .setDepth(6); // one level above the rect (depth 5)
+      .setDepth(6);
+  }
 
-    // Register the Phaser animation once (it is global — skip if already created)
-    if (!this.scene.anims.exists(idleKey) && this.data.animFrames?.idle) {
-      const { start, end, frameRate, repeat } = this.data.animFrames.idle;
-      this.scene.anims.create({
-        key: idleKey,
-        frames: this.scene.anims.generateFrameNumbers(idleKey, { start, end }),
-        frameRate,
-        repeat,
-      });
+  // Returns the Phaser animation key for the current state, or null (→ rect).
+  private getSpriteAnimKey(): string | null {
+    const k = this.data.spriteKey;
+    if (!k) return null;
+    switch (this.state) {
+      case 'idle': return this.spriteAnims.has(`${k}_idle`) ? `${k}_idle` : null;
+      case 'walk': return this.spriteAnims.has(`${k}_walk`) ? `${k}_walk` : null;
+      case 'jump':
+        if (this.vy <= 0 && this.spriteAnims.has(`${k}_jump_rise`)) return `${k}_jump_rise`;
+        if (this.vy  > 0 && this.spriteAnims.has(`${k}_jump_fall`)) return `${k}_jump_fall`;
+        return null;
+      default:
+        return null;
     }
-
-    this.hasIdleSprite = true;
   }
 
   private initDebugOverlays(): void {
@@ -340,29 +371,37 @@ export class Fighter {
   }
 
   private syncVisuals(dtFrames: number): void {
-    // Sprite path: idle state when idle texture was loaded
-    const useSprite = this.hasIdleSprite && !!this.sprite && this.state === 'idle';
+    const animKey = this.getSpriteAnimKey();
+    const useSprite = !!this.sprite && !!animKey;
 
     if (useSprite && this.sprite) {
       this.rect.setVisible(false);
-      this.syncSpriteVisuals(this.sprite, dtFrames);
+      this.syncSpriteVisuals(this.sprite, animKey!, dtFrames);
     } else {
       this.sprite?.setVisible(false);
       this.syncRectVisuals(dtFrames);
     }
   }
 
-  // Sprite visual update — used when the idle sprite sheet is present.
-  private syncSpriteVisuals(spr: Phaser.GameObjects.Sprite, dtFrames: number): void {
-    spr.setPosition(this.x, this.y).setVisible(true).setFlipX(this.facing === -1);
+  // Sprite visual update: position, animation, scale, tint.
+  private syncSpriteVisuals(spr: Phaser.GameObjects.Sprite, animKey: string, dtFrames: number): void {
+    spr.setPosition(this.x, this.y).setVisible(true);
 
-    // Keep idle animation playing
-    const animKey = `${this.data.spriteKey}_idle`;
-    if (!spr.anims.isPlaying || spr.anims.currentAnim?.key !== animKey) {
-      spr.play(animKey, true);
+    // Play animation — ignoreIfPlaying=true avoids restarting the same anim each frame;
+    // false forces an immediate switch when the desired anim changes (e.g. rise → fall).
+    const currentKey = spr.anims.currentAnim?.key;
+    if (currentKey !== animKey) {
+      spr.play(animKey, false);
     }
 
-    // Hit / block feedback via tint (mirrors the rect flash logic)
+    // Scale: uniform so the sprite renders at spriteDisplayHeight game-pixels tall.
+    // setFlipX handles the facing direction on top of the uniform scale.
+    const targetH = this.data.spriteDisplayHeight ?? 110;
+    const scale = targetH / spr.frame.realHeight;
+    spr.setScale(scale);
+    spr.setFlipX(this.facing === -1);
+
+    // Hit / block tint feedback
     if (this.hitFlashTimer > 0) {
       spr.setTint(0xffffff).setAlpha(1);
       this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dtFrames);
@@ -373,11 +412,11 @@ export class Fighter {
       spr.clearTint().setAlpha(1);
     }
 
-    // Consume landing squash timer even though we don't apply it to the sprite
+    // Consume landing squash timer (not visually applied to pixel-art sprite)
     this.landingSquash = Math.max(0, this.landingSquash - dtFrames);
   }
 
-  // Rectangle visual update — used for all states without a sprite sheet.
+  // Rectangle visual update: used for states without a sprite sheet yet.
   private syncRectVisuals(dtFrames: number): void {
     this.rect.setPosition(this.x, this.y).setVisible(true);
 

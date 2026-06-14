@@ -5,38 +5,35 @@ export class PreloadScene extends Phaser.Scene {
   constructor() { super(SCENES.PRELOAD); }
 
   preload(): void {
-    // Graceful fallback: if any asset 404s, log a warning and continue.
-    // The Fighter class checks textures.exists() before using a sprite,
-    // so a missing file will simply leave the rectangle placeholder active.
+    // Graceful fallback: missing assets log a warning; the fighter falls back to
+    // rectangle placeholders and the stage falls back to colored shapes.
     this.load.on('loaderror', (file: Phaser.Loader.File) => {
-      console.warn(
-        `[PreloadScene] Could not load "${file.key}" (${file.url}) — rectangle placeholder will be used.`
-      );
+      console.warn(`[PreloadScene] Could not load "${file.key}" — using placeholder.`);
     });
 
-    // ── Nahorai idle sprite sheet ────────────────────────────────────────────
-    // Drop the file at:  public/assets/fighters/nahorai/nahorai_idle.png
-    //   • Frame size : 96 × 96 px
-    //   • Frame count: 6 frames in a single horizontal row
-    //   • Direction  : character facing RIGHT
-    //   • Background : transparent (PNG)
-    //
-    // When this file exists the Fighter will automatically switch from
-    // the rectangle to the animated sprite during the idle state.
-    // All other states (walk, attack, jump, hitstun, knockdown) continue to
-    // use the rectangle until their own sprite sheets are added.
-    // ────────────────────────────────────────────────────────────────────────
-    this.load.spritesheet(
-      'nahorai_idle',
-      'assets/fighters/nahorai/nahorai_idle.png',
-      { frameWidth: 96, frameHeight: 96 }
-    );
+    // ── Stage background ─────────────────────────────────────────────────────
+    this.load.image('stage_bg', 'assets/stage/bg.png');
+
+    // ── Nahorai sprite sheets ────────────────────────────────────────────────
+    // idle  — 1774×887,  6 frames × 1 row
+    this.load.spritesheet('nahorai_idle', 'assets/fighters/nahorai/nahorai_idle.png', {
+      frameWidth: 295, frameHeight: 883, margin: 2,
+    });
+
+    // walk  — 2172×724,  6 frames × 1 row
+    this.load.spritesheet('nahorai_walk', 'assets/fighters/nahorai/nahorai_walk.png', {
+      frameWidth: 362, frameHeight: 724,
+    });
+
+    // jump  — 1536×1024, 4 frames × 2 rows (rise row then fall row)
+    this.load.spritesheet('nahorai_jump', 'assets/fighters/nahorai/nahorai_jump.png', {
+      frameWidth: 384, frameHeight: 512,
+    });
 
     // Loading bar
-    const bg  = this.add.rectangle(GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2, 300, 20, 0x333333).setOrigin(0, 0.5);
+    const bg  = this.add.rectangle(GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2, 300, 20, 0x222222).setOrigin(0, 0.5);
     const bar = this.add.rectangle(GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2, 0,   20, 0x3399ff).setOrigin(0, 0.5);
-    bg.setDepth(0);
-    bar.setDepth(1);
+    bg.setDepth(0); bar.setDepth(1);
 
     this.load.on('progress', (v: number) => bar.setSize(300 * v, 20));
   }

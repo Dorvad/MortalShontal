@@ -55,19 +55,17 @@ export class FightScene extends Phaser.Scene {
   }
 
   private buildStage(): void {
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e).setDepth(0);
-
-    const groundH = GAME_HEIGHT - GROUND_Y;
-    this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + groundH / 2, STAGE_RIGHT - STAGE_LEFT, groundH, 0x3d2e1e).setDepth(1);
-    this.add.rectangle(GAME_WIDTH / 2, GROUND_Y, STAGE_RIGHT - STAGE_LEFT, 4, 0x8b6b4a).setDepth(2);
-
-    this.add.rectangle(STAGE_LEFT - 10,  GAME_HEIGHT / 2, 20, GAME_HEIGHT, 0x2a2a3e).setDepth(1);
-    this.add.rectangle(STAGE_RIGHT + 10, GAME_HEIGHT / 2, 20, GAME_HEIGHT, 0x2a2a3e).setDepth(1);
-
-    // Background pillars
-    for (let i = 0; i < 5; i++) {
-      const px = STAGE_LEFT + (i + 0.5) * ((STAGE_RIGHT - STAGE_LEFT) / 5);
-      this.add.rectangle(px, GROUND_Y - 55, 18, 110, 0x2a3050).setDepth(1).setAlpha(0.45);
+    if (this.textures.exists('stage_bg')) {
+      // Pixel-art background — scale to fill the full game canvas
+      this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'stage_bg')
+        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
+        .setDepth(0);
+    } else {
+      // Fallback: colored rectangles when the background image is missing
+      this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e).setDepth(0);
+      const groundH = GAME_HEIGHT - GROUND_Y;
+      this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + groundH / 2, STAGE_RIGHT - STAGE_LEFT, groundH, 0x3d2e1e).setDepth(1);
+      this.add.rectangle(GAME_WIDTH / 2, GROUND_Y, STAGE_RIGHT - STAGE_LEFT, 4, 0x8b6b4a).setDepth(2);
     }
   }
 
