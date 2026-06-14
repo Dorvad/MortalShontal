@@ -15,19 +15,19 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('stage_bg', 'assets/stage/bg.png');
 
     // ── Nahorai sprite sheets ────────────────────────────────────────────────
-    // idle  — 1774×887,  6 frames × 1 row
+    // idle  — 2560×853,  6 frames × 1 row  (frameW = floor(2560/6) = 426)
     this.load.spritesheet('nahorai_idle', 'assets/fighters/nahorai/nahorai_idle.png', {
-      frameWidth: 295, frameHeight: 883, margin: 2,
+      frameWidth: 426, frameHeight: 853,
     });
 
-    // walk  — 2172×724,  6 frames × 1 row
+    // walk  — 2560×852,  6 frames × 1 row
     this.load.spritesheet('nahorai_walk', 'assets/fighters/nahorai/nahorai_walk.png', {
-      frameWidth: 362, frameHeight: 724,
+      frameWidth: 426, frameHeight: 852,
     });
 
-    // jump  — 1536×1024, 4 frames × 2 rows (rise row then fall row)
+    // jump  — 2560×852,  4 frames × 1 row  (rise only; fall holds frame 3)
     this.load.spritesheet('nahorai_jump', 'assets/fighters/nahorai/nahorai_jump.png', {
-      frameWidth: 384, frameHeight: 512,
+      frameWidth: 640, frameHeight: 852,
     });
 
     // ── Touch controls (Kenney Mobile Controls pack) ─────────────────────────
