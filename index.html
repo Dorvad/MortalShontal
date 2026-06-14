@@ -2,39 +2,68 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>MortalShontal</title>
     <style>
-      * {
+      *,
+      *::before,
+      *::after {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
 
-      html,
+      html {
+        /* Lock scroll on iOS Safari */
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
       body {
         width: 100%;
         height: 100%;
         overflow: hidden;
         background: #000;
+
+        /* Prevent all default touch behaviors */
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
+        -webkit-touch-callout: none;   /* No iOS callout on long-press */
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior: none;     /* No pull-to-refresh / bounce */
       }
 
       #game-container {
-        width: 100%;
-        height: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        /* Respect notch/home-indicator safe areas without shrinking canvas */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
       }
 
       canvas {
         display: block;
         touch-action: none;
+        /* Crisp pixel rendering — important once pixel-art sprites are added */
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
       }
     </style>
   </head>

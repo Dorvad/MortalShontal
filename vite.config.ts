@@ -14,7 +14,11 @@ export default defineConfig({
     },
   },
   server: {
-    host: true,
+    host: true,   // bind 0.0.0.0 so phones on the same network can connect
     port: 5173,
+  },
+  preview: {
+    host: true,   // same for `npm run preview`
+    port: 4173,
   },
 });

@@ -51,6 +51,11 @@ export class Fighter {
   hurtbox: Hurtbox;
 
   private rect: Phaser.GameObjects.Rectangle;
+  // Optional sprite layer — activated automatically once the texture is loaded.
+  // Currently only the idle animation is supported.  Add more anim keys here
+  // (walk, attack, jump …) as sprite sheets become available.
+  private sprite?: Phaser.GameObjects.Sprite;
+  private hasIdleSprite = false;
   private scene: Phaser.Scene;
 
   private stateTimer = 0;
@@ -86,6 +91,39 @@ export class Fighter {
       .setDepth(5);
 
     this.initDebugOverlays();
+    this.trySetupSprite();
+  }
+
+  // ── Sprite layer ────────────────────────────────────────────────────────────
+  // Called once from the constructor.  If the idle texture was loaded in
+  // PreloadScene the fighter switches to sprite-based rendering for the idle
+  // state; all other states keep using the rectangle placeholder until their
+  // own sprite sheets are added.
+  // To add the next animation (e.g. walk):
+  //   1. Load the sheet in PreloadScene: this.load.spritesheet('nahorai_walk', ...)
+  //   2. Add the anim key to trySetupSprite and the state check in syncVisuals.
+  private trySetupSprite(): void {
+    if (!this.data.spriteKey) return;
+
+    const idleKey = `${this.data.spriteKey}_idle`;
+    if (!this.scene.textures.exists(idleKey)) return;
+
+    this.sprite = this.scene.add.sprite(this.x, this.y, idleKey)
+      .setOrigin(0.5, 1)
+      .setDepth(6); // one level above the rect (depth 5)
+
+    // Register the Phaser animation once (it is global — skip if already created)
+    if (!this.scene.anims.exists(idleKey) && this.data.animFrames?.idle) {
+      const { start, end, frameRate, repeat } = this.data.animFrames.idle;
+      this.scene.anims.create({
+        key: idleKey,
+        frames: this.scene.anims.generateFrameNumbers(idleKey, { start, end }),
+        frameRate,
+        repeat,
+      });
+    }
+
+    this.hasIdleSprite = true;
   }
 
   private initDebugOverlays(): void {
@@ -302,7 +340,46 @@ export class Fighter {
   }
 
   private syncVisuals(dtFrames: number): void {
-    this.rect.setPosition(this.x, this.y);
+    // Sprite path: idle state when idle texture was loaded
+    const useSprite = this.hasIdleSprite && !!this.sprite && this.state === 'idle';
+
+    if (useSprite && this.sprite) {
+      this.rect.setVisible(false);
+      this.syncSpriteVisuals(this.sprite, dtFrames);
+    } else {
+      this.sprite?.setVisible(false);
+      this.syncRectVisuals(dtFrames);
+    }
+  }
+
+  // Sprite visual update — used when the idle sprite sheet is present.
+  private syncSpriteVisuals(spr: Phaser.GameObjects.Sprite, dtFrames: number): void {
+    spr.setPosition(this.x, this.y).setVisible(true).setFlipX(this.facing === -1);
+
+    // Keep idle animation playing
+    const animKey = `${this.data.spriteKey}_idle`;
+    if (!spr.anims.isPlaying || spr.anims.currentAnim?.key !== animKey) {
+      spr.play(animKey, true);
+    }
+
+    // Hit / block feedback via tint (mirrors the rect flash logic)
+    if (this.hitFlashTimer > 0) {
+      spr.setTint(0xffffff).setAlpha(1);
+      this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dtFrames);
+    } else if (this.blockFlashTimer > 0) {
+      spr.setTint(0xaaddff).setAlpha(0.9);
+      this.blockFlashTimer = Math.max(0, this.blockFlashTimer - dtFrames);
+    } else {
+      spr.clearTint().setAlpha(1);
+    }
+
+    // Consume landing squash timer even though we don't apply it to the sprite
+    this.landingSquash = Math.max(0, this.landingSquash - dtFrames);
+  }
+
+  // Rectangle visual update — used for all states without a sprite sheet.
+  private syncRectVisuals(dtFrames: number): void {
+    this.rect.setPosition(this.x, this.y).setVisible(true);
 
     // ── Scale (squash-and-stretch) ───────────────────────────────────────────
     let scaleX = this.facing as number;
@@ -315,27 +392,19 @@ export class Fighter {
       this.landingSquash = Math.max(0, this.landingSquash - dtFrames);
     } else if (this.state === 'attack') {
       if (this.attackPhaseName === 'startup') {
-        scaleX = this.facing * 0.88;
-        scaleY = 1.1;
+        scaleX = this.facing * 0.88; scaleY = 1.1;
       } else if (this.attackPhaseName === 'active') {
-        scaleX = this.facing * 1.14;
-        scaleY = 0.9;
+        scaleX = this.facing * 1.14; scaleY = 0.9;
       } else {
-        scaleX = this.facing * 0.95;
-        scaleY = 1.04;
+        scaleX = this.facing * 0.95; scaleY = 1.04;
       }
     } else if (this.state === 'jump' && !this.onGround) {
-      scaleX = this.facing * 0.9;
-      scaleY = 1.1;
+      scaleX = this.facing * 0.9; scaleY = 1.1;
     } else if (this.state === 'knockdown') {
-      scaleX = this.facing * 1.4;
-      scaleY = 0.55;
+      scaleX = this.facing * 1.4; scaleY = 0.55;
     }
 
     this.rect.setScale(scaleX, scaleY);
-
-    // ── Angle (knockdown lies flat) ──────────────────────────────────────────
-    this.rect.setAngle(this.state === 'knockdown' ? 0 : 0);
 
     // ── Color / alpha ────────────────────────────────────────────────────────
     if (this.hitFlashTimer > 0) {
@@ -482,6 +551,7 @@ export class Fighter {
 
   destroy(): void {
     this.rect.destroy();
+    this.sprite?.destroy();
     this.debugHurtboxRect?.destroy();
     this.debugHitboxRect?.destroy();
     this.debugLabel?.destroy();

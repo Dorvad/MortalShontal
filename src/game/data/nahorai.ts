@@ -57,8 +57,10 @@ export const nahoraiData: FighterData = {
       hitboxOffset: { x: 36, y: -66, w: 88, h: 56 },
     },
   },
-  // Sprite sheet prep — swap spriteKey and verify animFrames indices when art is ready
-  spriteKey: undefined,
+  // Sprite key prefix.  Fighter looks for textures named `${spriteKey}_idle`,
+  // `${spriteKey}_walk`, etc.  Set to 'nahorai' so the idle sheet at
+  // public/assets/fighters/nahorai/nahorai_idle.png is found automatically.
+  spriteKey: 'nahorai',
   animFrames: {
     idle:         { start: 0,  end: 3,  frameRate: 8,  repeat: -1 },
     walk:         { start: 4,  end: 9,  frameRate: 12, repeat: -1 },
