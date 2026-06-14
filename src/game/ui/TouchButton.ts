@@ -4,62 +4,77 @@ export interface TouchButtonConfig {
   scene: Phaser.Scene;
   x: number;
   y: number;
-  radius: number;
-  label: string;
-  color: number;
+  size: number;        // display size in game pixels (width & height)
+  baseKey: string;     // texture key for normal state
+  highlightKey: string; // texture key for pressed overlay
+  iconKey?: string;    // optional icon drawn on top
+  iconSize?: number;   // icon display size; defaults to size * 0.55
 }
 
 export class TouchButton {
-  private circle: Phaser.GameObjects.Arc;
-  private text: Phaser.GameObjects.Text;
-  private _held = false;       // true while finger is down
-  private _edgeFired = false;  // latched on pointerdown, consumed by takeEdge()
+  private base: Phaser.GameObjects.Image;
+  private highlight: Phaser.GameObjects.Image;
+  private icon?: Phaser.GameObjects.Image;
+
+  private _held = false;
+  private _edgeFired = false;
   private activePointers = new Set<number>();
 
   constructor(cfg: TouchButtonConfig) {
-    const { scene, x, y, radius, label, color } = cfg;
+    const { scene, x, y, size, baseKey, highlightKey, iconKey, iconSize } = cfg;
 
-    this.circle = scene.add
-      .circle(x, y, radius, color, 0.42)
-      .setStrokeStyle(2, color, 0.85)
-      .setInteractive()
+    this.base = scene.add.image(x, y, baseKey)
+      .setDisplaySize(size, size)
       .setScrollFactor(0)
-      .setDepth(10);
+      .setDepth(10)
+      .setAlpha(0.82)
+      .setInteractive();
 
-    this.text = scene.add
-      .text(x, y, label, { fontSize: `${Math.round(radius * 0.65)}px`, color: '#ffffff' })
-      .setOrigin(0.5)
+    this.highlight = scene.add.image(x, y, highlightKey)
+      .setDisplaySize(size, size)
       .setScrollFactor(0)
-      .setDepth(11);
+      .setDepth(11)
+      .setVisible(false);
 
-    this.circle.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+    if (iconKey) {
+      const is = iconSize ?? Math.round(size * 0.55);
+      this.icon = scene.add.image(x, y, iconKey)
+        .setDisplaySize(is, is)
+        .setScrollFactor(0)
+        .setDepth(12)
+        .setAlpha(0.9);
+    }
+
+    this.base.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
       this.activePointers.add(ptr.id);
       this._held = true;
-      this._edgeFired = true; // latch: survives a frame even if finger lifts fast
+      this._edgeFired = true;
+      this.highlight.setVisible(true);
     });
 
     scene.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
       this.activePointers.delete(ptr.id);
-      if (this.activePointers.size === 0) this._held = false;
+      if (this.activePointers.size === 0) {
+        this._held = false;
+        this.highlight.setVisible(false);
+      }
     });
 
     scene.input.on('pointermove', (ptr: Phaser.Input.Pointer) => {
       if (!ptr.isDown) {
         this.activePointers.delete(ptr.id);
-        if (this.activePointers.size === 0) this._held = false;
+        if (this.activePointers.size === 0) {
+          this._held = false;
+          this.highlight.setVisible(false);
+        }
       }
     });
   }
 
-  /** True while the finger is held down. */
   get pressed(): boolean {
     return this._held;
   }
 
-  /**
-   * Returns true once per tap (rising edge), even for fast taps.
-   * Clears the latch so subsequent calls return false until the next press.
-   */
   takeEdge(): boolean {
     const fired = this._edgeFired;
     this._edgeFired = false;
@@ -67,12 +82,14 @@ export class TouchButton {
   }
 
   setVisible(v: boolean): void {
-    this.circle.setVisible(v);
-    this.text.setVisible(v);
+    this.base.setVisible(v);
+    this.highlight.setVisible(v ? this._held : false);
+    this.icon?.setVisible(v);
   }
 
   destroy(): void {
-    this.circle.destroy();
-    this.text.destroy();
+    this.base.destroy();
+    this.highlight.destroy();
+    this.icon?.destroy();
   }
 }

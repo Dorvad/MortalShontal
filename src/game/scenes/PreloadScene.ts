@@ -30,6 +30,19 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: 384, frameHeight: 512,
     });
 
+    // ── Touch controls (Kenney Mobile Controls pack) ─────────────────────────
+    const ctrlPath = 'assets/ui/controls/';
+    this.load.image('ctrl_btn',           ctrlPath + 'button_circle.png');
+    this.load.image('ctrl_btn_hl',        ctrlPath + 'button_circle_highlight.png');
+    this.load.image('ctrl_dir_left',      ctrlPath + 'direction_left.png');
+    this.load.image('ctrl_dir_left_hl',   ctrlPath + 'direction_left_highlight.png');
+    this.load.image('ctrl_dir_right',     ctrlPath + 'direction_right.png');
+    this.load.image('ctrl_dir_right_hl',  ctrlPath + 'direction_right_highlight.png');
+    this.load.image('ctrl_icon_jump',     ctrlPath + 'icon_jump.png');
+    this.load.image('ctrl_icon_sword',    ctrlPath + 'icon_sword.png');
+    this.load.image('ctrl_icon_fire',     ctrlPath + 'icon_fire.png');
+    this.load.image('ctrl_icon_shield',   ctrlPath + 'icon_shield.png');
+
     // Loading bar
     const bg  = this.add.rectangle(GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2, 300, 20, 0x222222).setOrigin(0, 0.5);
     const bar = this.add.rectangle(GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2, 0,   20, 0x3399ff).setOrigin(0, 0.5);

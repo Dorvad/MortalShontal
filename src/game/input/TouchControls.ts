@@ -12,27 +12,28 @@ export class TouchControls {
   private btnBlock: TouchButton;
 
   constructor(scene: Phaser.Scene) {
-    const pad = 28;
-    const r = 42;   // slightly larger for easier tapping
-    const bottom = GAME_HEIGHT - pad - r;
+    const pad   = 24;
+    const size  = 88;   // display size for all buttons
+    const gap   = 8;
+    const bottom = GAME_HEIGHT - pad - size / 2;
 
-    // Left side: d-pad style movement cluster
-    this.btnLeft  = new TouchButton({ scene, x: pad + r,           y: bottom,              radius: r, label: '◀', color: 0x4488ff });
-    this.btnRight = new TouchButton({ scene, x: pad + r * 3 + 12,  y: bottom,              radius: r, label: '▶', color: 0x4488ff });
-    this.btnJump  = new TouchButton({ scene, x: pad + r * 2 + 6,   y: bottom - r * 2 - 12, radius: r, label: '▲', color: 0x44aaff });
+    // Left side: directional buttons + jump above
+    const lx0 = pad + size / 2;
+    this.btnLeft  = new TouchButton({ scene, x: lx0,                  y: bottom,           size, baseKey: 'ctrl_dir_left',  highlightKey: 'ctrl_dir_left_hl' });
+    this.btnRight = new TouchButton({ scene, x: lx0 + size + gap,     y: bottom,           size, baseKey: 'ctrl_dir_right', highlightKey: 'ctrl_dir_right_hl' });
+    this.btnJump  = new TouchButton({ scene, x: lx0 + (size + gap) / 2, y: bottom - size - gap, size, baseKey: 'ctrl_btn',  highlightKey: 'ctrl_btn_hl', iconKey: 'ctrl_icon_jump' });
 
     // Right side: action buttons
-    const rx = GAME_WIDTH - pad;
-    this.btnBlock = new TouchButton({ scene, x: rx - r * 3 - 12,  y: bottom,               radius: r, label: 'BLK', color: 0xffaa00 });
-    this.btnLight = new TouchButton({ scene, x: rx - r,            y: bottom,               radius: r, label: 'L',   color: 0x44ff88 });
-    this.btnHeavy = new TouchButton({ scene, x: rx - r * 2 - 12,  y: bottom - r * 2 - 12,  radius: r, label: 'H',   color: 0xff4444 });
+    const rx = GAME_WIDTH - pad - size / 2;
+    this.btnLight = new TouchButton({ scene, x: rx,               y: bottom,           size, baseKey: 'ctrl_btn', highlightKey: 'ctrl_btn_hl', iconKey: 'ctrl_icon_sword' });
+    this.btnHeavy = new TouchButton({ scene, x: rx - size - gap,  y: bottom - size - gap, size, baseKey: 'ctrl_btn', highlightKey: 'ctrl_btn_hl', iconKey: 'ctrl_icon_fire' });
+    this.btnBlock = new TouchButton({ scene, x: rx - size - gap,  y: bottom,           size, baseKey: 'ctrl_btn', highlightKey: 'ctrl_btn_hl', iconKey: 'ctrl_icon_shield' });
   }
 
   read(): Partial<InputState> {
     return {
       left:        this.btnLeft.pressed,
       right:       this.btnRight.pressed,
-      // One-shot: takeEdge() captures fast taps regardless of frame timing
       jump:        this.btnJump.takeEdge(),
       lightAttack: this.btnLight.takeEdge(),
       heavyAttack: this.btnHeavy.takeEdge(),
