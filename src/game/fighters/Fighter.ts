@@ -110,10 +110,9 @@ export class Fighter {
       if (!this.scene.anims.exists(animKey)) {
         this.scene.anims.create({
           key: animKey,
-          frames: this.scene.anims.generateFrameNumbers(texKey, {
-            start: frames.start,
-            end:   frames.end,
-          }),
+          frames: frames.frames
+            ? this.scene.anims.generateFrameNumbers(texKey, { frames: frames.frames })
+            : this.scene.anims.generateFrameNumbers(texKey, { start: frames.start, end: frames.end }),
           frameRate: frames.frameRate,
           repeat:    frames.repeat,
         });
@@ -127,6 +126,13 @@ export class Fighter {
     register(`${k}_walk`, `${k}_walk`, 'walk');
     register(`${k}_jump`, `${k}_jump_rise`, 'jump_rise');
     register(`${k}_jump`, `${k}_jump_fall`, 'jump_fall');
+
+    // Smooth (bilinear) filtering — these are high-res smooth sprites, not pixel art
+    for (const texKey of [`${k}_idle`, `${k}_walk`, `${k}_jump`]) {
+      if (this.scene.textures.exists(texKey)) {
+        this.scene.textures.get(texKey).setFilter(Phaser.Textures.FilterMode.LINEAR);
+      }
+    }
 
     if (this.spriteAnims.size === 0) return;
 
@@ -386,6 +392,15 @@ export class Fighter {
   // Sprite visual update: position, animation, scale, tint.
   private syncSpriteVisuals(spr: Phaser.GameObjects.Sprite, animKey: string, dtFrames: number): void {
     spr.setPosition(this.x, this.y).setVisible(true);
+
+    // Per-frame horizontal anchor compensation — counters position drift in the spritesheet.
+    // Offsets are stored in source pixels and scaled by the current sprite scale.
+    const frameOffsets = this.data.spriteFrameOffsets?.[animKey];
+    if (frameOffsets) {
+      const texFrame = spr.anims.currentFrame?.textureFrame as number | undefined ?? 0;
+      const rawOffset = frameOffsets[texFrame] ?? 0;
+      spr.x += rawOffset * spr.scale * this.facing;
+    }
 
     // Play animation — ignoreIfPlaying=true avoids restarting the same anim each frame;
     // false forces an immediate switch when the desired anim changes (e.g. rise → fall).
