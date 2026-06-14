@@ -8,6 +8,7 @@ import { GROUND_Y, STAGE_LEFT, STAGE_RIGHT, GRAVITY } from '../utils/constants';
 import { AttackData } from '../combat/AttackData';
 
 const FPS = 60;
+const HITSTUN_GROUND_FRICTION = 0.72;
 
 interface TakeHitParams {
   damage: number;
@@ -15,6 +16,21 @@ interface TakeHitParams {
   knockbackY: number;
   hitstun: number;
   blockstun: number;
+}
+
+export interface FighterDebugInfo {
+  id: string;
+  state: FighterStateName;
+  vx: number;
+  vy: number;
+  health: number;
+  onGround: boolean;
+  attackPhase: 'startup' | 'active' | 'recovery' | null;
+  attackId: string | null;
+  attackFrame: number;
+  attackTotal: number;
+  hasHitThisSwing: boolean;
+  freezeFrames: number;
 }
 
 export class Fighter {
@@ -37,10 +53,16 @@ export class Fighter {
   private rect: Phaser.GameObjects.Rectangle;
   private scene: Phaser.Scene;
 
-  // State timer in frames
   private stateTimer = 0;
   private currentAttack: AttackData | null = null;
   private attackPhaseName: 'startup' | 'active' | 'recovery' | null = null;
+
+  // Game-feel timers (in frames)
+  private freezeFrames = 0;
+  private hitFlashTimer = 0;
+  private blockFlashTimer = 0;
+  private landingSquash = 0;
+  private wasOnGround = true;
 
   // Debug overlays
   private debugHurtboxRect?: Phaser.GameObjects.Rectangle;
@@ -79,7 +101,12 @@ export class Fighter {
       .setDepth(20)
       .setVisible(false);
 
-    this.debugLabel = this.scene.add.text(0, 0, '', { fontSize: '12px', color: '#ffff00' })
+    this.debugLabel = this.scene.add.text(0, 0, '', {
+      fontSize: '11px',
+      color: '#ffff00',
+      stroke: '#000000',
+      strokeThickness: 2,
+    })
       .setDepth(21)
       .setVisible(false);
   }
@@ -87,21 +114,28 @@ export class Fighter {
   update(dt: number, input: InputState): void {
     const dtFrames = dt / (1000 / FPS);
 
+    // Hitstop freeze: skip game logic but still render
+    if (this.freezeFrames > 0) {
+      this.freezeFrames = Math.max(0, this.freezeFrames - dtFrames);
+      this.syncVisuals(0);
+      return;
+    }
+
     this.stateTimer = Math.max(0, this.stateTimer - dtFrames);
 
     switch (this.state) {
-      case 'idle':    this.updateIdle(input);   break;
-      case 'walk':    this.updateWalk(input);   break;
-      case 'jump':    this.updateJump(input);   break;
-      case 'attack':  this.updateAttack(input); break;
-      case 'block':   this.updateBlock(input);  break;
-      case 'hitstun': this.updateHitstun();     break;
-      case 'knockdown': this.updateKnockdown(); break;
+      case 'idle':     this.updateIdle(input);   break;
+      case 'walk':     this.updateWalk(input);   break;
+      case 'jump':     this.updateJump(input);   break;
+      case 'attack':   this.updateAttack(input); break;
+      case 'block':    this.updateBlock(input);  break;
+      case 'hitstun':  this.updateHitstun();     break;
+      case 'knockdown': this.updateKnockdown();  break;
     }
 
     this.applyGravity(dt);
-    this.applyMovement(dt);
-    this.syncVisuals();
+    this.applyMovement(dt, dtFrames);
+    this.syncVisuals(dtFrames);
     this.syncBoxes();
   }
 
@@ -109,18 +143,18 @@ export class Fighter {
     this.vx = 0;
     this.hitbox.active = false;
 
-    if (input.block) { this.setState('block'); return; }
-    if (input.lightAttack) { this.startAttack('light'); return; }
-    if (input.heavyAttack) { this.startAttack('heavy'); return; }
-    if (input.jump) { this.startJump(); return; }
+    if (input.block)        { this.setState('block'); return; }
+    if (input.lightAttack)  { this.startAttack('light'); return; }
+    if (input.heavyAttack)  { this.startAttack('heavy'); return; }
+    if (input.jump)         { this.startJump(); return; }
     if (input.left || input.right) { this.setState('walk'); }
   }
 
   private updateWalk(input: InputState): void {
-    if (input.block) { this.setState('block'); return; }
-    if (input.lightAttack) { this.startAttack('light'); return; }
-    if (input.heavyAttack) { this.startAttack('heavy'); return; }
-    if (input.jump) { this.startJump(); return; }
+    if (input.block)        { this.setState('block'); return; }
+    if (input.lightAttack)  { this.startAttack('light'); return; }
+    if (input.heavyAttack)  { this.startAttack('heavy'); return; }
+    if (input.jump)         { this.startJump(); return; }
 
     if (input.left) {
       this.vx = -this.data.walkSpeed;
@@ -142,12 +176,16 @@ export class Fighter {
     if (input.lightAttack) { this.startAttack('light'); return; }
     if (input.heavyAttack) { this.startAttack('heavy'); return; }
 
+    const airSpeed = this.data.walkSpeed * this.data.airControl;
     if (input.left) {
-      this.vx = -this.data.walkSpeed * 0.85;
+      this.vx = -airSpeed;
       this.facing = -1;
     } else if (input.right) {
-      this.vx = this.data.walkSpeed * 0.85;
+      this.vx = airSpeed;
       this.facing = 1;
+    } else {
+      // Gentle air drift deceleration (not instant stop)
+      this.vx *= 0.88;
     }
   }
 
@@ -155,14 +193,13 @@ export class Fighter {
     if (!this.currentAttack) { this.setState('idle'); return; }
 
     const atk = this.currentAttack;
-    const elapsed = (atk.startup + atk.active + atk.recovery) - this.stateTimer;
-    const startupEnd  = atk.startup;
-    const activeEnd   = atk.startup + atk.active;
+    const total = atk.startup + atk.active + atk.recovery;
+    const elapsed = total - this.stateTimer;
 
-    if (elapsed < startupEnd) {
+    if (elapsed < atk.startup) {
       this.attackPhaseName = 'startup';
       this.hitbox.active = false;
-    } else if (elapsed < activeEnd) {
+    } else if (elapsed < atk.startup + atk.active) {
       this.attackPhaseName = 'active';
       this.hitbox.active = true;
     } else {
@@ -189,11 +226,20 @@ export class Fighter {
 
   private updateHitstun(): void {
     this.hitbox.active = false;
+    // Ground friction bleeds off sliding momentum
+    if (this.onGround) {
+      this.vx *= HITSTUN_GROUND_FRICTION;
+      if (Math.abs(this.vx) < 4) this.vx = 0;
+    }
     if (this.stateTimer <= 0 && this.onGround) this.setState('idle');
   }
 
   private updateKnockdown(): void {
     this.hitbox.active = false;
+    if (this.onGround) {
+      this.vx *= 0.8;
+      if (Math.abs(this.vx) < 4) this.vx = 0;
+    }
     if (this.stateTimer <= 0) this.setState('idle');
   }
 
@@ -202,6 +248,7 @@ export class Fighter {
     if (!atk) return;
 
     this.currentAttack = atk;
+    this.hitbox.attackId  = atk.id;
     this.hitbox.damage     = atk.damage;
     this.hitbox.knockbackX = atk.knockbackX;
     this.hitbox.knockbackY = atk.knockbackY;
@@ -229,35 +276,78 @@ export class Fighter {
 
   private applyGravity(dt: number): void {
     if (!this.onGround) {
-      this.vy += GRAVITY * (dt / 1000);
+      this.vy = Math.min(this.vy + GRAVITY * (dt / 1000), this.data.maxFallSpeed);
     }
   }
 
-  private applyMovement(dt: number): void {
+  private applyMovement(dt: number, _dtFrames: number): void {
+    this.wasOnGround = this.onGround;
+
     this.x += this.vx * (dt / 1000);
     this.y += this.vy * (dt / 1000);
 
-    // Ground
     if (this.y >= GROUND_Y) {
       this.y = GROUND_Y;
       this.vy = 0;
+      if (!this.wasOnGround) {
+        // Just landed — trigger squash
+        this.landingSquash = 5;
+        if (this.state === 'jump') this.setState('idle');
+      }
       this.onGround = true;
     }
 
-    // Stage walls
     const halfW = this.data.width / 2;
     this.x = Phaser.Math.Clamp(this.x, STAGE_LEFT + halfW, STAGE_RIGHT - halfW);
   }
 
-  private syncVisuals(): void {
+  private syncVisuals(dtFrames: number): void {
     this.rect.setPosition(this.x, this.y);
-    this.rect.setScale(this.facing, 1);
 
-    // Tint feedback
-    if (this.state === 'hitstun') {
-      this.rect.setFillStyle(0xffffff);
+    // ── Scale (squash-and-stretch) ───────────────────────────────────────────
+    let scaleX = this.facing as number;
+    let scaleY = 1;
+
+    if (this.landingSquash > 0) {
+      const t = this.landingSquash / 5;
+      scaleX = this.facing * (1 + 0.18 * t);
+      scaleY = 1 - 0.18 * t;
+      this.landingSquash = Math.max(0, this.landingSquash - dtFrames);
+    } else if (this.state === 'attack') {
+      if (this.attackPhaseName === 'startup') {
+        scaleX = this.facing * 0.88;
+        scaleY = 1.1;
+      } else if (this.attackPhaseName === 'active') {
+        scaleX = this.facing * 1.14;
+        scaleY = 0.9;
+      } else {
+        scaleX = this.facing * 0.95;
+        scaleY = 1.04;
+      }
+    } else if (this.state === 'jump' && !this.onGround) {
+      scaleX = this.facing * 0.9;
+      scaleY = 1.1;
+    } else if (this.state === 'knockdown') {
+      scaleX = this.facing * 1.4;
+      scaleY = 0.55;
+    }
+
+    this.rect.setScale(scaleX, scaleY);
+
+    // ── Angle (knockdown lies flat) ──────────────────────────────────────────
+    this.rect.setAngle(this.state === 'knockdown' ? 0 : 0);
+
+    // ── Color / alpha ────────────────────────────────────────────────────────
+    if (this.hitFlashTimer > 0) {
+      this.rect.setFillStyle(0xffffff).setAlpha(1);
+      this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dtFrames);
+    } else if (this.blockFlashTimer > 0) {
+      this.rect.setFillStyle(0xaaddff).setAlpha(0.95);
+      this.blockFlashTimer = Math.max(0, this.blockFlashTimer - dtFrames);
     } else if (this.state === 'block') {
-      this.rect.setFillStyle(this.data.color).setAlpha(0.6);
+      this.rect.setFillStyle(this.data.color).setAlpha(0.55);
+    } else if (this.state === 'attack' && this.attackPhaseName === 'startup') {
+      this.rect.setFillStyle(this.data.color).setAlpha(0.75);
     } else {
       this.rect.setFillStyle(this.data.color).setAlpha(1);
     }
@@ -272,7 +362,6 @@ export class Fighter {
       w: this.data.hurtboxW,
       h: this.data.hurtboxH,
     };
-    // Disable hurtbox while in knockdown
     this.hurtbox.active = this.state !== 'knockdown';
 
     if (this.currentAttack && this.hitbox.active) {
@@ -286,65 +375,65 @@ export class Fighter {
     }
   }
 
-  takeHit(params: TakeHitParams): void {
-    if (this.state === 'knockdown') return;
+  takeHit(params: TakeHitParams): 'hit' | 'blocked' | 'immune' {
+    if (this.state === 'knockdown') return 'immune';
 
     if (this.state === 'block') {
-      this.vx = -params.knockbackX * 0.3;
-      this.stateTimer = params.blockstun;
-      return;
+      // Only block attacks coming from the front
+      const isFrontHit =
+        (params.knockbackX > 0 && this.facing === -1) ||
+        (params.knockbackX < 0 && this.facing === 1);
+      if (isFrontHit) {
+        this.vx = params.knockbackX * 0.25;
+        this.stateTimer = params.blockstun;
+        this.blockFlashTimer = 4;
+        return 'blocked';
+      }
     }
 
     this.health = Math.max(0, this.health - params.damage);
-    this.vx = -params.knockbackX;
+    // knockbackX from CombatResolver is already directional (hb.knockbackX * attacker.facing)
+    this.vx = params.knockbackX;
     this.vy = params.knockbackY;
+    this.hitFlashTimer = 8;
 
     if (this.health <= 0) {
       this.state = 'knockdown';
       this.stateTimer = 90;
       this.hitbox.active = false;
-      return;
+      return 'hit';
     }
 
     this.onGround = false;
     this.state = 'hitstun';
     this.stateTimer = params.hitstun;
     this.hitbox.active = false;
+    return 'hit';
   }
 
-  setDebugVisible(visible: boolean): void {
-    this.debugHurtboxRect?.setVisible(visible);
-    this.debugHitboxRect?.setVisible(visible);
-    this.debugLabel?.setVisible(visible);
-
-    if (!visible) return;
-    this.updateDebugOverlays();
+  freeze(frames: number): void {
+    this.freezeFrames = Math.max(this.freezeFrames, frames);
   }
 
-  private updateDebugOverlays(): void {
-    const hurt = this.hurtbox.rect;
-    this.debugHurtboxRect
-      ?.setPosition(hurt.x + hurt.w / 2, hurt.y + hurt.h / 2)
-      .setSize(hurt.w, hurt.h);
+  get debugInfo(): FighterDebugInfo {
+    const atk = this.currentAttack;
+    const total = atk ? atk.startup + atk.active + atk.recovery : 0;
+    const frame = atk ? Math.round(total - this.stateTimer) : 0;
 
-    if (this.hitbox.active) {
-      const hb = this.hitbox.rect;
-      this.debugHitboxRect
-        ?.setPosition(hb.x + hb.w / 2, hb.y + hb.h / 2)
-        .setSize(hb.w, hb.h)
-        .setVisible(true);
-    } else {
-      this.debugHitboxRect?.setSize(0, 0).setVisible(false);
-    }
-
-    const phase = this.attackPhaseName ? ` [${this.attackPhaseName}]` : '';
-    this.debugLabel
-      ?.setPosition(this.x - 30, this.y - this.data.height - 20)
-      .setText(`${this.state}${phase}`);
-  }
-
-  get attackPhaseLabel(): string | null {
-    return this.attackPhaseName;
+    return {
+      id: this.id,
+      state: this.state,
+      vx: Math.round(this.vx),
+      vy: Math.round(this.vy),
+      health: Math.round(this.health),
+      onGround: this.onGround,
+      attackPhase: this.attackPhaseName,
+      attackId: atk?.id ?? null,
+      attackFrame: Math.max(0, Math.min(frame, total)),
+      attackTotal: total,
+      hasHitThisSwing: this.hitbox.hitTargets.size > 0,
+      freezeFrames: Math.round(this.freezeFrames),
+    };
   }
 
   updateDebug(visible: boolean): void {
@@ -357,6 +446,38 @@ export class Fighter {
     this.debugHurtboxRect?.setVisible(true);
     this.debugLabel?.setVisible(true);
     this.updateDebugOverlays();
+  }
+
+  private updateDebugOverlays(): void {
+    // Hurtbox
+    const hurt = this.hurtbox.rect;
+    this.debugHurtboxRect
+      ?.setPosition(hurt.x + hurt.w / 2, hurt.y + hurt.h / 2)
+      .setSize(hurt.w, hurt.h);
+
+    // Hitbox — only show during active frames
+    if (this.hitbox.active) {
+      const hb = this.hitbox.rect;
+      this.debugHitboxRect
+        ?.setPosition(hb.x + hb.w / 2, hb.y + hb.h / 2)
+        .setSize(hb.w, hb.h)
+        .setVisible(true);
+    } else {
+      this.debugHitboxRect?.setSize(0, 0).setVisible(false);
+    }
+
+    // Label above fighter
+    const info = this.debugInfo;
+    let label = `${info.id} | ${info.state}`;
+    if (info.attackPhase) {
+      const hitMarker = info.hasHitThisSwing ? ' ✓HIT' : '';
+      label += ` [${info.attackPhase} ${info.attackFrame}/${info.attackTotal}${hitMarker}]`;
+    }
+    if (info.freezeFrames > 0) label += ` ⏸${info.freezeFrames}`;
+
+    this.debugLabel
+      ?.setPosition(this.x - 40, this.y - this.data.height - 22)
+      .setText(label);
   }
 
   destroy(): void {

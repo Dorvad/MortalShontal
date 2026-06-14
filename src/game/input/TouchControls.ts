@@ -11,47 +11,31 @@ export class TouchControls {
   private btnHeavy: TouchButton;
   private btnBlock: TouchButton;
 
-  // Track previous held state for edge detection
-  private prevJump = false;
-  private prevLight = false;
-  private prevHeavy = false;
-
   constructor(scene: Phaser.Scene) {
-    const pad = 30;
-    const r = 38;
+    const pad = 28;
+    const r = 42;   // slightly larger for easier tapping
     const bottom = GAME_HEIGHT - pad - r;
 
-    // Left side: movement d-pad style
-    this.btnLeft  = new TouchButton({ scene, x: pad + r,            y: bottom, radius: r, label: '◀', color: 0x4488ff });
-    this.btnRight = new TouchButton({ scene, x: pad + r * 3 + 10,   y: bottom, radius: r, label: '▶', color: 0x4488ff });
-    this.btnJump  = new TouchButton({ scene, x: pad + r * 2 + 5,    y: bottom - r * 2 - 10, radius: r, label: '▲', color: 0x44aaff });
+    // Left side: d-pad style movement cluster
+    this.btnLeft  = new TouchButton({ scene, x: pad + r,           y: bottom,              radius: r, label: '◀', color: 0x4488ff });
+    this.btnRight = new TouchButton({ scene, x: pad + r * 3 + 12,  y: bottom,              radius: r, label: '▶', color: 0x4488ff });
+    this.btnJump  = new TouchButton({ scene, x: pad + r * 2 + 6,   y: bottom - r * 2 - 12, radius: r, label: '▲', color: 0x44aaff });
 
     // Right side: action buttons
     const rx = GAME_WIDTH - pad;
-    this.btnBlock = new TouchButton({ scene, x: rx - r * 3 - 10, y: bottom, radius: r, label: 'BLK', color: 0xffaa00 });
-    this.btnLight = new TouchButton({ scene, x: rx - r,           y: bottom, radius: r, label: 'L',   color: 0x44ff88 });
-    this.btnHeavy = new TouchButton({ scene, x: rx - r * 2 - 10,  y: bottom - r * 2 - 10, radius: r, label: 'H', color: 0xff4444 });
+    this.btnBlock = new TouchButton({ scene, x: rx - r * 3 - 12,  y: bottom,               radius: r, label: 'BLK', color: 0xffaa00 });
+    this.btnLight = new TouchButton({ scene, x: rx - r,            y: bottom,               radius: r, label: 'L',   color: 0x44ff88 });
+    this.btnHeavy = new TouchButton({ scene, x: rx - r * 2 - 12,  y: bottom - r * 2 - 12,  radius: r, label: 'H',   color: 0xff4444 });
   }
 
   read(): Partial<InputState> {
-    const jumpHeld  = this.btnJump.pressed;
-    const lightHeld = this.btnLight.pressed;
-    const heavyHeld = this.btnHeavy.pressed;
-
-    const jump        = jumpHeld  && !this.prevJump;
-    const lightAttack = lightHeld && !this.prevLight;
-    const heavyAttack = heavyHeld && !this.prevHeavy;
-
-    this.prevJump  = jumpHeld;
-    this.prevLight = lightHeld;
-    this.prevHeavy = heavyHeld;
-
     return {
       left:        this.btnLeft.pressed,
       right:       this.btnRight.pressed,
-      jump,
-      lightAttack,
-      heavyAttack,
+      // One-shot: takeEdge() captures fast taps regardless of frame timing
+      jump:        this.btnJump.takeEdge(),
+      lightAttack: this.btnLight.takeEdge(),
+      heavyAttack: this.btnHeavy.takeEdge(),
       block:       this.btnBlock.pressed,
     };
   }

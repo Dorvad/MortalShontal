@@ -6,6 +6,8 @@ export interface FighterData {
   maxHealth: number;
   walkSpeed: number;
   jumpVelocity: number;
+  maxFallSpeed: number;
+  airControl: number;       // 0–1 multiplier applied to walkSpeed while airborne
   width: number;
   height: number;
   color: number;
