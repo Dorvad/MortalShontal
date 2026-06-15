@@ -3,7 +3,6 @@ import { Fighter } from '../fighters/Fighter';
 import { FighterInput } from '../fighters/FighterInput';
 import { CombatResolver } from '../combat/CombatResolver';
 import { nahoraiData } from '../data/nahorai';
-import { dummyData } from '../data/dummy';
 import {
   SCENES, GAME_WIDTH, GAME_HEIGHT, GROUND_Y, STAGE_LEFT, STAGE_RIGHT,
   DEBUG_KEY, HITSTOP_LIGHT, HITSTOP_HEAVY, HITSTOP_BLOCKED,
@@ -30,7 +29,8 @@ export class FightScene extends Phaser.Scene {
     this.buildStage();
 
     this.player = new Fighter(this, nahoraiData, 240, 1);
-    this.enemy  = new Fighter(this, dummyData,   720, -1);
+    // Temporary mirror match — enemy shares nahorai sprite until a second character exists
+    this.enemy  = new Fighter(this, { ...nahoraiData, id: 'enemy', displayName: 'Enemy', walkSpeed: 0 }, 720, -1);
 
     this.playerInput = new FighterInput(this, true, true);
     this.combat = new CombatResolver();

@@ -18,7 +18,9 @@ export interface FighterData {
   attacks: Record<string, AttackData>;
   // sprite sheet prep
   spriteKey?: string;
-  spriteDisplayHeight?: number; // visual height in game pixels; controls sprite scale
+  spriteDisplayHeight?: number;    // visual height in game pixels; controls sprite scale
+  spriteNativeFrameHeight?: number; // source pixel height all sprites were drawn at; normalises
+                                    // scale when different images have different canvas sizes
   animFrames?: Record<string, {
     start: number;
     end: number;

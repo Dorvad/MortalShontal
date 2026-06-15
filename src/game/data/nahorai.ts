@@ -58,8 +58,11 @@ export const nahoraiData: FighterData = {
     },
   },
   spriteKey: 'nahorai',
-  // 170 px → scale ≈ 0.20 (vs old 0.14) — noticeably sharper character
   spriteDisplayHeight: 170,
+  // All nahorai sprites were drawn at 853 px body height (the idle/walk sheet frame height).
+  // Combat stills (block, hitstun, light1/2) have a larger canvas (1350 px) but the same
+  // body size, so we normalise every sprite to 853 to keep character size consistent.
+  spriteNativeFrameHeight: 853,
   animFrames: {
     // Idle — use frames 0-3 only; frames 4-5 have severe drift / direction issues
     idle:         { start: 0, end: 3, frames: [0, 1, 2, 3], frameRate: 8,  repeat: -1 },

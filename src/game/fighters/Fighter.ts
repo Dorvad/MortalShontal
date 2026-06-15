@@ -455,9 +455,11 @@ export class Fighter {
     }
 
     // Scale: uniform so the sprite renders at spriteDisplayHeight game-pixels tall.
-    // setFlipX handles the facing direction on top of the uniform scale.
-    const targetH = this.data.spriteDisplayHeight ?? 110;
-    const scale = targetH / spr.frame.realHeight;
+    // spriteNativeFrameHeight normalises images that share the same character body size
+    // but have different canvas heights (e.g. idle frames 853px vs combat stills 1350px).
+    const targetH  = this.data.spriteDisplayHeight   ?? 110;
+    const nativeH  = this.data.spriteNativeFrameHeight ?? spr.frame.realHeight;
+    const scale    = targetH / nativeH;
     spr.setScale(scale);
     spr.setFlipX(this.facing === -1);
 
