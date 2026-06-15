@@ -20,6 +20,7 @@ export const HITSTOP_BLOCKED = 2;
 export const SCENES = {
   BOOT: 'BootScene',
   PRELOAD: 'PreloadScene',
+  MENU: 'MainMenuScene',
   FIGHT: 'FightScene',
   UI: 'UIScene',
 } as const;

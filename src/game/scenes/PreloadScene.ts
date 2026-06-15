@@ -11,6 +11,11 @@ export class PreloadScene extends Phaser.Scene {
       console.warn(`[PreloadScene] Could not load "${file.key}" — using placeholder.`);
     });
 
+    // ── Main menu assets ─────────────────────────────────────────────────────
+    this.load.image('menu_logo',   'assets/ui/mainmenu/logo.png');
+    this.load.image('menu_blonde', 'assets/ui/mainmenu/blonde.png');
+    this.load.image('menu_goth',   'assets/ui/mainmenu/goth.png');
+
     // ── Stage background ─────────────────────────────────────────────────────
     this.load.image('stage_bg', 'assets/stage/bg.png');
 
@@ -68,7 +73,6 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.scene.start(SCENES.FIGHT);
-    this.scene.launch(SCENES.UI);
+    this.scene.start(SCENES.MENU);
   }
 }
