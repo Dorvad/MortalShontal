@@ -36,7 +36,17 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('nahorai_light2',  'assets/fighters/nahorai/nahorai_light2.png');
     this.load.image('nahorai_hitstun', 'assets/fighters/nahorai/nahorai_hitstun.png');
 
-    // ── Touch controls (Kenney Mobile Controls pack) ─────────────────────────
+    // ── Arava sprite sheets (pixel art — small frames, nearest-neighbour filter) ─
+    // idle  — 96×120,  3 frames × 32px wide × 120px tall
+    this.load.spritesheet('arava_idle', 'assets/fighters/arava/arava_idle.png', {
+      frameWidth: 32, frameHeight: 120,
+    });
+    // walk  — 64×56,  4 frames × 16px wide × 56px tall
+    this.load.spritesheet('arava_walk', 'assets/fighters/arava/arava_walk.png', {
+      frameWidth: 16, frameHeight: 56,
+    });
+    // hitstun — 64×64, single image
+    this.load.image('arava_hitstun', 'assets/fighters/arava/arava_hitstun.png');
     const ctrlPath = 'assets/ui/controls/';
     this.load.image('ctrl_btn',           ctrlPath + 'button_circle.png');
     this.load.image('ctrl_btn_hl',        ctrlPath + 'button_circle_highlight.png');

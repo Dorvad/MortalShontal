@@ -162,10 +162,13 @@ export class Fighter {
       this.spriteAnims.add(`${k}_light_attack`);
     }
 
-    // Smooth (bilinear) filtering on all nahorai textures
+    // Texture filtering: LINEAR for high-res downscaled art, NEAREST for pixel art upscaled
+    const filterMode = this.data.spriteFilter === 'nearest'
+      ? Phaser.Textures.FilterMode.NEAREST
+      : Phaser.Textures.FilterMode.LINEAR;
     for (const texKey of [`${k}_idle`, `${k}_walk`, `${k}_jump`, `${k}_block`, `${k}_light1`, `${k}_light2`, `${k}_hitstun`]) {
       if (this.scene.textures.exists(texKey)) {
-        this.scene.textures.get(texKey).setFilter(Phaser.Textures.FilterMode.LINEAR);
+        this.scene.textures.get(texKey).setFilter(filterMode);
       }
     }
 
