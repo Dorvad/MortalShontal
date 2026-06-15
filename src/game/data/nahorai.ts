@@ -67,14 +67,12 @@ export const nahoraiData: FighterData = {
     // of a bidirectional cycle and face the wrong direction
     walk:         { start: 0, end: 2, frames: [0, 1, 2],    frameRate: 10, repeat: -1 },
     // Jump — 4 rise frames; fall holds frame 3 (airborne peak)
-    jump_rise:    { start: 0, end: 3,                        frameRate: 10, repeat: 0  },
-    jump_fall:    { start: 3, end: 3,                        frameRate: 10, repeat: -1 },
-    // Attack / block / hitstun / knockdown — no sheets yet; placeholders
-    light_attack: { start: 0, end: 2, frameRate: 18, repeat: 0  },
-    heavy_attack: { start: 0, end: 4, frameRate: 12, repeat: 0  },
-    block:        { start: 0, end: 0, frameRate: 8,  repeat: -1 },
-    hitstun:      { start: 0, end: 1, frameRate: 10, repeat: 0  },
-    knockdown:    { start: 0, end: 2, frameRate: 8,  repeat: 0  },
+    jump_rise:    { start: 0, end: 3, frameRate: 10, repeat: 0  },
+    jump_fall:    { start: 3, end: 3, frameRate: 10, repeat: -1 },
+    // heavy_attack / knockdown — placeholder for when those sheets arrive
+    heavy_attack: { start: 0, end: 4, frameRate: 12, repeat: 0 },
+    knockdown:    { start: 0, end: 2, frameRate: 8,  repeat: 0 },
+    // block / hitstun / light_attack handled via separate image files in Fighter.trySetupSprite()
   },
   // Per-frame x-offset compensation (source pixels) to counteract character drift
   // within the sprite sheet. Target centre = 426/2 = 213 px.

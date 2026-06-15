@@ -127,8 +127,43 @@ export class Fighter {
     register(`${k}_jump`, `${k}_jump_rise`, 'jump_rise');
     register(`${k}_jump`, `${k}_jump_fall`, 'jump_fall');
 
-    // Smooth (bilinear) filtering — these are high-res smooth sprites, not pixel art
-    for (const texKey of [`${k}_idle`, `${k}_walk`, `${k}_jump`]) {
+    // Single-frame combat sprites (block, hitstun — each loaded as a plain image)
+    const registerSingle = (texKey: string, animKey: string, repeat: number): void => {
+      if (!this.scene.textures.exists(texKey)) return;
+      if (!this.scene.anims.exists(animKey)) {
+        this.scene.anims.create({
+          key: animKey,
+          frames: [{ key: texKey }],
+          frameRate: 1,
+          repeat,
+        });
+      }
+      this.spriteAnims.add(animKey);
+    };
+    registerSingle(`${k}_block`,   `${k}_block`,   -1);
+    registerSingle(`${k}_hitstun`, `${k}_hitstun`, 0);
+
+    // Light attack: 2 separate single-frame images timed to match startup/active phases
+    if (this.scene.textures.exists(`${k}_light1`) && this.scene.textures.exists(`${k}_light2`)) {
+      const lightAnimKey = `${k}_light_attack`;
+      if (!this.scene.anims.exists(lightAnimKey)) {
+        const lightAtk = this.data.attacks['light'];
+        const startupMs = lightAtk ? Math.round(lightAtk.startup * 1000 / FPS) : 50;
+        const activeMs  = lightAtk ? Math.round(lightAtk.active  * 1000 / FPS) : 83;
+        this.scene.anims.create({
+          key: lightAnimKey,
+          frames: [
+            { key: `${k}_light1`, duration: startupMs }, // windup
+            { key: `${k}_light2`, duration: activeMs  }, // punch extended (hitbox active)
+          ],
+          repeat: 0,
+        });
+      }
+      this.spriteAnims.add(`${k}_light_attack`);
+    }
+
+    // Smooth (bilinear) filtering on all nahorai textures
+    for (const texKey of [`${k}_idle`, `${k}_walk`, `${k}_jump`, `${k}_block`, `${k}_light1`, `${k}_light2`, `${k}_hitstun`]) {
       if (this.scene.textures.exists(texKey)) {
         this.scene.textures.get(texKey).setFilter(Phaser.Textures.FilterMode.LINEAR);
       }
@@ -152,11 +187,21 @@ export class Fighter {
     const k = this.data.spriteKey;
     if (!k) return null;
     switch (this.state) {
-      case 'idle': return this.spriteAnims.has(`${k}_idle`) ? `${k}_idle` : null;
-      case 'walk': return this.spriteAnims.has(`${k}_walk`) ? `${k}_walk` : null;
+      case 'idle':   return this.spriteAnims.has(`${k}_idle`) ? `${k}_idle` : null;
+      case 'walk':   return this.spriteAnims.has(`${k}_walk`) ? `${k}_walk` : null;
       case 'jump':
         if (this.vy <= 0 && this.spriteAnims.has(`${k}_jump_rise`)) return `${k}_jump_rise`;
         if (this.vy  > 0 && this.spriteAnims.has(`${k}_jump_fall`)) return `${k}_jump_fall`;
+        return null;
+      case 'block':
+        return this.spriteAnims.has(`${k}_block`) ? `${k}_block` : null;
+      case 'hitstun':
+      case 'knockdown':
+        return this.spriteAnims.has(`${k}_hitstun`) ? `${k}_hitstun` : null;
+      case 'attack':
+        if (this.currentAttack?.id === 'light' && this.spriteAnims.has(`${k}_light_attack`)) {
+          return `${k}_light_attack`;
+        }
         return null;
       default:
         return null;

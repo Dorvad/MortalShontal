@@ -30,6 +30,12 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: 640, frameHeight: 852,
     });
 
+    // Single-frame combat sprites (1080×1350 each)
+    this.load.image('nahorai_block',   'assets/fighters/nahorai/nahorai_block.png');
+    this.load.image('nahorai_light1',  'assets/fighters/nahorai/nahorai_light1.png');
+    this.load.image('nahorai_light2',  'assets/fighters/nahorai/nahorai_light2.png');
+    this.load.image('nahorai_hitstun', 'assets/fighters/nahorai/nahorai_hitstun.png');
+
     // ── Touch controls (Kenney Mobile Controls pack) ─────────────────────────
     const ctrlPath = 'assets/ui/controls/';
     this.load.image('ctrl_btn',           ctrlPath + 'button_circle.png');

@@ -59,6 +59,21 @@ export class UIScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(36).setVisible(false);
 
+    // ── Fullscreen toggle ─────────────────────────────────────────────────────
+    const fsBtn = this.add.text(GAME_WIDTH - 10, 8, '⛶', {
+      fontSize: '22px', color: '#ffffffaa',
+    })
+      .setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(40)
+      .setInteractive({ useHandCursor: true })
+      .setAlpha(0.55)
+      .on('pointerdown', () => this.scale.toggleFullscreen())
+      .on('pointerover', () => fsBtn.setAlpha(1))
+      .on('pointerout',  () => fsBtn.setAlpha(0.55));
+
+    this.input.keyboard?.addKey('F').on('down', () => this.scale.toggleFullscreen());
+
     this.fightScene = this.scene.get(SCENES.FIGHT);
 
     this.fightScene.events.on('roundStart', () => {
