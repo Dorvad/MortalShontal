@@ -42,9 +42,9 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('nahorai_hitstun', 'assets/fighters/nahorai/nahorai_hitstun.png');
 
     // ── Arava sprite sheets (pixel art — small frames, nearest-neighbour filter) ─
-    // idle  — 96×120,  3 frames × 32px wide × 120px tall
+    // idle  — 192×56,  6 frames × 32px wide × 56px tall  (3 cols × 2 rows reformatted to single strip)
     this.load.spritesheet('arava_idle', 'assets/fighters/arava/arava_idle.png', {
-      frameWidth: 32, frameHeight: 120,
+      frameWidth: 32, frameHeight: 56,
     });
     // walk  — 64×56,  4 frames × 16px wide × 56px tall
     this.load.spritesheet('arava_walk', 'assets/fighters/arava/arava_walk.png', {

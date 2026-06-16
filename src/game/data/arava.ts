@@ -2,12 +2,12 @@ import { FighterData } from '../fighters/FighterData';
 
 // Arava — pixel-art sprite sheets (small, upscaled with NEAREST filter)
 // Sprite sheet dimensions after reformatting:
-//   arava_idle.png  — 96×120,   3 frames × 32×120  (bottom 8 empty rows trimmed → feet at frame edge)
-//   arava_walk.png  — 64×56,    4 frames × 16×56   (bottom 8 empty rows trimmed)
-//   arava_hitstun.png — 64×64,  1 frame  (5 empty rows at bottom — minor float, acceptable for now)
+//   arava_idle.png    — 192×56,  6 frames × 32×56  (original was 3-col × 2-row; flattened to single strip)
+//   arava_walk.png    — 64×56,   4 frames × 16×56
+//   arava_hitstun.png — 64×64,   1 frame  (single image)
 //
-// spriteDisplayHeight 170 → scale = 170/120 ≈ 1.42.  Character body (~112 px in frame) appears
-// at ~159 px game height — slightly shorter than Nahorai (~170 px) due to frame proportions.
+// spriteDisplayHeight 170 → scale = 170/56 ≈ 3.04 for idle/walk (same scale, consistent size).
+// Character body (~53–55 px in frame) appears at ~161–167 px game height ≈ Nahorai's ~170 px.
 
 export const aravaData: FighterData = {
   id: 'arava',
@@ -54,7 +54,7 @@ export const aravaData: FighterData = {
   spriteDisplayHeight: 170,
   spriteFilter: 'nearest',
   animFrames: {
-    idle: { start: 0, end: 2, frameRate: 8,  repeat: -1 },
+    idle: { start: 0, end: 5, frameRate: 8,  repeat: -1 },  // 6 frames (3 cols × 2 rows → single strip)
     walk: { start: 0, end: 3, frameRate: 12, repeat: -1 },
     // hitstun handled via registerSingle (arava_hitstun.png loaded as plain image)
   },
