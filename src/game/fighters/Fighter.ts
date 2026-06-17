@@ -162,6 +162,30 @@ export class Fighter {
       this.spriteAnims.add(`${k}_light_attack`);
     }
 
+    // Heavy attack: 6-frame spritesheet (frames 0-1 startup, 2-4 active, 5 recovery)
+    if (this.scene.textures.exists(`${k}_heavy`)) {
+      const heavyAnimKey = `${k}_heavy_attack`;
+      if (!this.scene.anims.exists(heavyAnimKey)) {
+        const heavyAtk   = this.data.attacks['heavy'];
+        const startupMs  = heavyAtk ? Math.round(heavyAtk.startup  * 1000 / FPS / 2) : 100;
+        const activeMs   = heavyAtk ? Math.round(heavyAtk.active   * 1000 / FPS / 3) : 33;
+        const recoveryMs = heavyAtk ? Math.round(heavyAtk.recovery * 1000 / FPS)     : 367;
+        this.scene.anims.create({
+          key: heavyAnimKey,
+          frames: [
+            { key: `${k}_heavy`, frame: 0, duration: startupMs  },
+            { key: `${k}_heavy`, frame: 1, duration: startupMs  },
+            { key: `${k}_heavy`, frame: 2, duration: activeMs   },
+            { key: `${k}_heavy`, frame: 3, duration: activeMs   },
+            { key: `${k}_heavy`, frame: 4, duration: activeMs   },
+            { key: `${k}_heavy`, frame: 5, duration: recoveryMs },
+          ],
+          repeat: 0,
+        });
+      }
+      this.spriteAnims.add(heavyAnimKey);
+    }
+
     // Texture filtering: LINEAR for high-res downscaled art, NEAREST for pixel art upscaled
     const filterMode = this.data.spriteFilter === 'nearest'
       ? Phaser.Textures.FilterMode.NEAREST
@@ -170,6 +194,10 @@ export class Fighter {
       if (this.scene.textures.exists(texKey)) {
         this.scene.textures.get(texKey).setFilter(filterMode);
       }
+    }
+    // Heavy attack sprites are pixel art — always sharpen with NEAREST regardless of character filter
+    if (this.scene.textures.exists(`${k}_heavy`)) {
+      this.scene.textures.get(`${k}_heavy`).setFilter(Phaser.Textures.FilterMode.NEAREST);
     }
 
     if (this.spriteAnims.size === 0) return;
@@ -204,6 +232,9 @@ export class Fighter {
       case 'attack':
         if (this.currentAttack?.id === 'light' && this.spriteAnims.has(`${k}_light_attack`)) {
           return `${k}_light_attack`;
+        }
+        if (this.currentAttack?.id === 'heavy' && this.spriteAnims.has(`${k}_heavy_attack`)) {
+          return `${k}_heavy_attack`;
         }
         return null;
       default:
