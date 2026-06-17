@@ -55,7 +55,7 @@ export const aravaData: FighterData = {
   spriteFilter: 'nearest',
   animFrames: {
     idle: { start: 0, end: 5, frameRate: 8,  repeat: -1 },  // 6 frames (3 cols × 2 rows → single strip)
-    walk: { start: 0, end: 3, frameRate: 12, repeat: -1 },
+    walk: { start: 0, end: 7, frameRate: 12, repeat: -1 },  // 8 frames (2 rows × 4 cols → single strip)
     // hitstun handled via registerSingle (arava_hitstun.png loaded as plain image)
   },
 };
