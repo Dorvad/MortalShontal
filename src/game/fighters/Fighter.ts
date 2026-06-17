@@ -190,14 +190,10 @@ export class Fighter {
     const filterMode = this.data.spriteFilter === 'nearest'
       ? Phaser.Textures.FilterMode.NEAREST
       : Phaser.Textures.FilterMode.LINEAR;
-    for (const texKey of [`${k}_idle`, `${k}_walk`, `${k}_jump`, `${k}_block`, `${k}_light1`, `${k}_light2`, `${k}_hitstun`]) {
+    for (const texKey of [`${k}_idle`, `${k}_walk`, `${k}_jump`, `${k}_block`, `${k}_light1`, `${k}_light2`, `${k}_hitstun`, `${k}_heavy`]) {
       if (this.scene.textures.exists(texKey)) {
         this.scene.textures.get(texKey).setFilter(filterMode);
       }
-    }
-    // Heavy attack sprites are pixel art — always sharpen with NEAREST regardless of character filter
-    if (this.scene.textures.exists(`${k}_heavy`)) {
-      this.scene.textures.get(`${k}_heavy`).setFilter(Phaser.Textures.FilterMode.NEAREST);
     }
 
     if (this.spriteAnims.size === 0) return;
