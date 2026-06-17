@@ -21,6 +21,7 @@ export const SCENES = {
   BOOT: 'BootScene',
   PRELOAD: 'PreloadScene',
   MENU: 'MainMenuScene',
+  SELECT: 'CharacterSelectScene',
   FIGHT: 'FightScene',
   UI: 'UIScene',
   SETTINGS: 'SettingsScene',

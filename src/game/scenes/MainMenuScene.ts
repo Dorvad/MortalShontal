@@ -303,13 +303,10 @@ export class MainMenuScene extends Phaser.Scene {
     }
   }
 
-  // ── Transition to fight ──────────────────────────────────────────────────
+  // ── Transition to character select ───────────────────────────────────────
   private startGame(): void {
     this.cameras.main.fadeOut(400, 0, 0, 0, (_cam: unknown, progress: number) => {
-      if (progress === 1) {
-        this.scene.start(SCENES.FIGHT);
-        this.scene.launch(SCENES.UI);
-      }
+      if (progress === 1) this.scene.start(SCENES.SELECT);
     });
   }
 }

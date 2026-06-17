@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from './utils/constants';
-import { BootScene }      from './scenes/BootScene';
-import { PreloadScene }   from './scenes/PreloadScene';
-import { MainMenuScene }  from './scenes/MainMenuScene';
-import { FightScene }     from './scenes/FightScene';
-import { UIScene }        from './scenes/UIScene';
-import { SettingsScene }  from './scenes/SettingsScene';
+import { BootScene }             from './scenes/BootScene';
+import { PreloadScene }          from './scenes/PreloadScene';
+import { MainMenuScene }         from './scenes/MainMenuScene';
+import { CharacterSelectScene }  from './scenes/CharacterSelectScene';
+import { FightScene }            from './scenes/FightScene';
+import { UIScene }               from './scenes/UIScene';
+import { SettingsScene }         from './scenes/SettingsScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -32,5 +33,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   input: {
     activePointers: 10,
   },
-  scene: [BootScene, PreloadScene, MainMenuScene, FightScene, UIScene, SettingsScene],
+  scene: [BootScene, PreloadScene, MainMenuScene, CharacterSelectScene, FightScene, UIScene, SettingsScene],
 };

@@ -3,6 +3,8 @@ import { HealthBar } from '../ui/HealthBar';
 import { SCENES, GAME_WIDTH } from '../utils/constants';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
+import { GameSettings } from '../GameSettings';
+import { FighterData }  from '../fighters/FighterData';
 
 const BAR_W  = 320;
 const BAR_H  = 22;
@@ -17,6 +19,9 @@ export class UIScene extends Phaser.Scene {
   private koText!:    Phaser.GameObjects.Text;   // center: K.O. / TIME!
   private restartText!: Phaser.GameObjects.Text;
 
+  private playerData!: FighterData;
+  private enemyData!:  FighterData;
+
   private fightScene!: Phaser.Scene;
 
   // State used to decide what the center-top text should show
@@ -26,15 +31,19 @@ export class UIScene extends Phaser.Scene {
   constructor() { super({ key: SCENES.UI, active: false }); }
 
   create(): void {
-    this.playerBar = new HealthBar(this, MARGIN, BAR_Y, BAR_W, BAR_H, nahoraiData.maxHealth, 0x3399ff);
-    this.enemyBar  = new HealthBar(this, GAME_WIDTH - MARGIN, BAR_Y, BAR_W, BAR_H, aravaData.maxHealth, 0xff4444, true);
+    const playerIsNahorai = GameSettings.playerCharId !== 'arava';
+    this.playerData = playerIsNahorai ? nahoraiData : aravaData;
+    this.enemyData  = playerIsNahorai ? aravaData   : nahoraiData;
+
+    this.playerBar = new HealthBar(this, MARGIN, BAR_Y, BAR_W, BAR_H, this.playerData.maxHealth, 0x3399ff);
+    this.enemyBar  = new HealthBar(this, GAME_WIDTH - MARGIN, BAR_Y, BAR_W, BAR_H, this.enemyData.maxHealth, 0xff4444, true);
 
     // Player name
-    this.add.text(MARGIN, BAR_Y + BAR_H + 4, nahoraiData.displayName, { fontSize: '12px', color: '#aaaaff' })
+    this.add.text(MARGIN, BAR_Y + BAR_H + 4, this.playerData.displayName, { fontSize: '12px', color: '#aaaaff' })
       .setScrollFactor(0).setDepth(32);
 
     // Enemy name
-    this.add.text(GAME_WIDTH - MARGIN, BAR_Y + BAR_H + 4, aravaData.displayName, { fontSize: '12px', color: '#ffaaaa' })
+    this.add.text(GAME_WIDTH - MARGIN, BAR_Y + BAR_H + 4, this.enemyData.displayName, { fontSize: '12px', color: '#ffaaaa' })
       .setScrollFactor(0).setDepth(32).setOrigin(1, 0);
 
     // Centre-top text — shows FIGHT!, countdown, YOU WIN/LOSE
@@ -165,8 +174,8 @@ export class UIScene extends Phaser.Scene {
     this.showingBanner  = false;
     this.lastTimerValue = null;
 
-    this.playerBar.setValue(nahoraiData.maxHealth);
-    this.enemyBar.setValue(aravaData.maxHealth);
+    this.playerBar.setValue(this.playerData.maxHealth);
+    this.enemyBar.setValue(this.enemyData.maxHealth);
 
     (this.scene.get(SCENES.FIGHT) as unknown as { restart: () => void }).restart();
   }
