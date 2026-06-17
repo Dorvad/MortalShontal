@@ -162,26 +162,23 @@ export class Fighter {
       this.spriteAnims.add(`${k}_light_attack`);
     }
 
-    // Heavy attack: 6-frame spritesheet (frames 0-1 startup, 2-4 active, 5 recovery)
+    // Heavy attack: N-frame spritesheet; first 2 = startup, middle = active, last = recovery
     if (this.scene.textures.exists(`${k}_heavy`)) {
       const heavyAnimKey = `${k}_heavy_attack`;
       if (!this.scene.anims.exists(heavyAnimKey)) {
         const heavyAtk   = this.data.attacks['heavy'];
-        const startupMs  = heavyAtk ? Math.round(heavyAtk.startup  * 1000 / FPS / 2) : 100;
-        const activeMs   = heavyAtk ? Math.round(heavyAtk.active   * 1000 / FPS / 3) : 33;
-        const recoveryMs = heavyAtk ? Math.round(heavyAtk.recovery * 1000 / FPS)     : 367;
-        this.scene.anims.create({
-          key: heavyAnimKey,
-          frames: [
-            { key: `${k}_heavy`, frame: 0, duration: startupMs  },
-            { key: `${k}_heavy`, frame: 1, duration: startupMs  },
-            { key: `${k}_heavy`, frame: 2, duration: activeMs   },
-            { key: `${k}_heavy`, frame: 3, duration: activeMs   },
-            { key: `${k}_heavy`, frame: 4, duration: activeMs   },
-            { key: `${k}_heavy`, frame: 5, duration: recoveryMs },
-          ],
-          repeat: 0,
-        });
+        const N = this.scene.textures.get(`${k}_heavy`).frameTotal - 1; // subtract __BASE
+        const nStartup  = Math.min(2, N - 2);
+        const nActive   = Math.max(1, N - nStartup - 1);
+        const startupMs = heavyAtk ? Math.round(heavyAtk.startup  * 1000 / FPS / Math.max(1, nStartup)) : 100;
+        const activeMs  = heavyAtk ? Math.round(heavyAtk.active   * 1000 / FPS / nActive)               : 33;
+        const recoveryMs = heavyAtk ? Math.round(heavyAtk.recovery * 1000 / FPS)                        : 367;
+        const frameList: { key: string; frame: number; duration: number }[] = [];
+        for (let i = 0; i < N; i++) {
+          const ms = i < nStartup ? startupMs : i < nStartup + nActive ? activeMs : recoveryMs;
+          frameList.push({ key: `${k}_heavy`, frame: i, duration: ms });
+        }
+        this.scene.anims.create({ key: heavyAnimKey, frames: frameList, repeat: 0 });
       }
       this.spriteAnims.add(heavyAnimKey);
     }
@@ -485,7 +482,8 @@ export class Fighter {
     }
 
     // Scale: uniform so the sprite renders at spriteDisplayHeight game-pixels tall.
-    const targetH = this.data.spriteDisplayHeight ?? 110;
+    const targetH = this.data.spriteDisplayHeightOverrides?.[animKey]
+      ?? this.data.spriteDisplayHeight ?? 110;
     const scale   = targetH / spr.frame.realHeight;
     spr.setScale(scale);
     spr.setFlipX(this.facing === -1);

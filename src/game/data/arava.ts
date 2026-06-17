@@ -1,13 +1,12 @@
 import { FighterData } from '../fighters/FighterData';
 
-// Arava — pixel-art sprite sheets (small, upscaled with NEAREST filter)
-// Sprite sheet dimensions after reformatting:
-//   arava_idle.png    — 192×56,  6 frames × 32×56  (original was 3-col × 2-row; flattened to single strip)
-//   arava_walk.png    — 64×56,   4 frames × 16×56
-//   arava_hitstun.png — 64×64,   1 frame  (single image)
+// Arava — high-res idle (192×192 frames), pixel-art walk (16×22 frames)
+// Sprite sheet dimensions:
+//   arava_idle.png    — 1152×192, 6 frames × 192×192  (high-res, LINEAR filter)
+//   arava_walk.png    — 128×22,   8 frames × 16×22    (pixel-art, NEAREST filter)
+//   arava_hitstun.png — single image
 //
-// spriteDisplayHeight 170 → scale = 170/56 ≈ 3.04 for idle/walk (same scale, consistent size).
-// Character body (~53–55 px in frame) appears at ~161–167 px game height ≈ Nahorai's ~170 px.
+// spriteDisplayHeight 190 → scale = 190/192 ≈ 0.99 for idle; character fills ~90% of frame → ~171px.
 
 export const aravaData: FighterData = {
   id: 'arava',
@@ -51,11 +50,16 @@ export const aravaData: FighterData = {
     },
   },
   spriteKey: 'arava',
-  spriteDisplayHeight: 170,
-  spriteFilter: 'nearest',
+  spriteDisplayHeight: 190,
+  spriteDisplayHeightOverrides: {
+    // heavy frame is 1024×1536; character fills ~70% of height → 1536*0.70≈1075px real
+    // to render at ~170px game height: 170/0.70 ≈ 243
+    'arava_heavy_attack': 243,
+  },
+  spriteFilter: 'linear',
   animFrames: {
-    idle: { start: 0, end: 5, frameRate: 8,  repeat: -1 },  // 6 frames (3 cols × 2 rows → single strip)
-    walk: { start: 0, end: 7, frameRate: 12, repeat: -1 },  // 8 frames (2 rows × 4 cols → single strip)
+    idle: { start: 0, end: 5, frameRate: 8,  repeat: -1 },  // 6 frames × 192×192
+    walk: { start: 0, end: 7, frameRate: 12, repeat: -1 },  // 8 frames × 16×22
     // hitstun handled via registerSingle (arava_hitstun.png loaded as plain image)
   },
 };

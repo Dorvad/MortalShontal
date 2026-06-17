@@ -46,14 +46,18 @@ export class PreloadScene extends Phaser.Scene {
       frameWidth: 192, frameHeight: 192,
     });
 
-    // ── Arava sprite sheets (pixel art — small frames, nearest-neighbour filter) ─
-    // idle  — 192×56,  6 frames × 32px wide × 56px tall  (3 cols × 2 rows reformatted to single strip)
+    // ── Arava sprite sheets ──────────────────────────────────────────────────
+    // idle  — 1152×192, 6 frames × 192×192 (high-res)
     this.load.spritesheet('arava_idle', 'assets/fighters/arava/arava_idle.png', {
-      frameWidth: 32, frameHeight: 56,
+      frameWidth: 192, frameHeight: 192,
     });
-    // walk  — 128×22,  8 frames × 16px wide × 22px tall  (two rows flattened to single strip)
+    // walk  — 128×22,  8 frames × 16×22 (pixel-art)
     this.load.spritesheet('arava_walk', 'assets/fighters/arava/arava_walk.png', {
       frameWidth: 16, frameHeight: 22,
+    });
+    // heavy attack — 4096×1536, 4 frames × 1024×1536 (high-res)
+    this.load.spritesheet('arava_heavy', 'assets/fighters/arava/arava_heavy.png', {
+      frameWidth: 1024, frameHeight: 1536,
     });
     // hitstun — 64×64, single image
     this.load.image('arava_hitstun', 'assets/fighters/arava/arava_hitstun.png');

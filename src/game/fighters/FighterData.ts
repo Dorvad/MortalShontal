@@ -19,6 +19,7 @@ export interface FighterData {
   // sprite sheet prep
   spriteKey?: string;
   spriteDisplayHeight?: number;       // visual height in game pixels; controls sprite scale
+  spriteDisplayHeightOverrides?: Record<string, number>; // per-anim overrides (e.g. for heavy attack)
   spriteFilter?: 'linear' | 'nearest'; // LINEAR for hi-res art (default), NEAREST for pixel art
   animFrames?: Record<string, {
     start: number;
