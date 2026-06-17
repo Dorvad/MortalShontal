@@ -23,4 +23,5 @@ export const SCENES = {
   MENU: 'MainMenuScene',
   FIGHT: 'FightScene',
   UI: 'UIScene',
+  SETTINGS: 'SettingsScene',
 } as const;

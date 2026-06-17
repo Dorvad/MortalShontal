@@ -4,9 +4,12 @@ import { FighterInput } from '../fighters/FighterInput';
 import { CombatResolver } from '../combat/CombatResolver';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
+import { AIInput }     from '../input/AIInput';
+import { emptyInput }  from '../input/InputState';
+import { GameSettings } from '../GameSettings';
 import {
   SCENES, GAME_WIDTH, GAME_HEIGHT, GROUND_Y, STAGE_LEFT, STAGE_RIGHT,
-  DEBUG_KEY, HITSTOP_LIGHT, HITSTOP_HEAVY, HITSTOP_BLOCKED,
+  DEBUG_KEY, HITSTOP_LIGHT, HITSTOP_HEAVY, HITSTOP_BLOCKED, ROUND_TIME,
 } from '../utils/constants';
 
 const ROUND_START_DELAY = 1800; // ms before fight begins
@@ -15,6 +18,7 @@ export class FightScene extends Phaser.Scene {
   private player!: Fighter;
   private enemy!: Fighter;
   private playerInput!: FighterInput;
+  private ai!: AIInput;
   private combat!: CombatResolver;
 
   private debugMode = false;
@@ -22,7 +26,8 @@ export class FightScene extends Phaser.Scene {
   private debugPanel?: Phaser.GameObjects.Text;
 
   private roundPhase: 'start' | 'fight' | 'ko' = 'start';
-  private roundTimer = 0;
+  private roundTimer  = 0;   // ms countdown for round-start delay
+  private matchTimer  = 0;   // seconds remaining in the round
 
   constructor() { super(SCENES.FIGHT); }
 
@@ -33,6 +38,7 @@ export class FightScene extends Phaser.Scene {
     this.enemy  = new Fighter(this, aravaData,   720, -1);
 
     this.playerInput = new FighterInput(this, true, true);
+    this.ai     = new AIInput();
     this.combat = new CombatResolver();
 
     this.debugKey = this.input.keyboard!.addKey(DEBUG_KEY as unknown as number);
@@ -51,17 +57,16 @@ export class FightScene extends Phaser.Scene {
 
     this.roundPhase = 'start';
     this.roundTimer = ROUND_START_DELAY;
+    this.matchTimer = ROUND_TIME;
     this.events.emit('roundStart');
   }
 
   private buildStage(): void {
     if (this.textures.exists('stage_bg')) {
-      // Pixel-art background — scale to fill the full game canvas
       this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'stage_bg')
         .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
         .setDepth(0);
     } else {
-      // Fallback: colored rectangles when the background image is missing
       this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e).setDepth(0);
       const groundH = GAME_HEIGHT - GROUND_Y;
       this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + groundH / 2, STAGE_RIGHT - STAGE_LEFT, groundH, 0x3d2e1e).setDepth(1);
@@ -77,6 +82,20 @@ export class FightScene extends Phaser.Scene {
     }
     if (this.roundPhase === 'ko') return;
 
+    // ── Match timer ───────────────────────────────────────────────────────────
+    if (!GameSettings.unlimitedTimer) {
+      this.matchTimer -= delta / 1000;
+      if (this.matchTimer <= 0) {
+        this.matchTimer = 0;
+        this.roundPhase = 'ko';
+        const playerWon = this.player.health >= this.enemy.health;
+        this.events.emit('ko', { playerWon, isTimeout: true });
+        this.events.emit('timerUpdate', 0);
+        return;
+      }
+    }
+    this.events.emit('timerUpdate', GameSettings.unlimitedTimer ? null : Math.ceil(this.matchTimer));
+
     // Debug toggle
     if (Phaser.Input.Keyboard.JustDown(this.debugKey)) {
       this.debugMode = !this.debugMode;
@@ -84,10 +103,12 @@ export class FightScene extends Phaser.Scene {
     }
 
     const input = this.playerInput.read();
-    const dummyInput = { left: false, right: false, jump: false, lightAttack: false, heavyAttack: false, block: false };
+    const enemyInput = GameSettings.enemyAI
+      ? this.ai.compute(delta, this.enemy, this.player)
+      : emptyInput();
 
     this.player.update(delta, input);
-    this.enemy.update(delta, dummyInput);
+    this.enemy.update(delta, enemyInput);
 
     // Face each other (only when not committed to an attack)
     this.faceOpponent(this.player, this.enemy);
@@ -108,13 +129,13 @@ export class FightScene extends Phaser.Scene {
     // Health events → UI scene
     this.events.emit('healthUpdate', {
       playerHP: this.player.health,
-      enemyHP: this.enemy.health,
+      enemyHP:  this.enemy.health,
     });
 
     // KO check
     if (this.player.health <= 0 || this.enemy.health <= 0) {
       this.roundPhase = 'ko';
-      this.events.emit('ko', { playerWon: this.enemy.health <= 0 });
+      this.events.emit('ko', { playerWon: this.enemy.health <= 0, isTimeout: false });
     }
   }
 
@@ -143,8 +164,8 @@ export class FightScene extends Phaser.Scene {
   }
 
   private updateDebugPanel(delta: number): void {
-    const pi = this.player.debugInfo;
-    const ei = this.enemy.debugInfo;
+    const pi  = this.player.debugInfo;
+    const ei  = this.enemy.debugInfo;
     const fps = Math.round(this.game.loop.actualFps);
 
     const fmtAttack = (i: typeof pi): string => {
@@ -153,8 +174,10 @@ export class FightScene extends Phaser.Scene {
       return `${i.attackId} [${i.attackPhase} ${i.attackFrame}/${i.attackTotal}${hit}]`;
     };
 
+    const timerStr = GameSettings.unlimitedTimer ? '∞' : String(Math.ceil(this.matchTimer));
+
     const lines = [
-      `FPS: ${fps}  δ:${Math.round(delta)}ms`,
+      `FPS: ${fps}  δ:${Math.round(delta)}ms  T:${timerStr}  AI:${GameSettings.enemyAI ? 'ON' : 'OFF'}`,
       `─────────────────────`,
       `Player  state: ${pi.state.padEnd(9)}  vx:${String(pi.vx).padStart(5)}  vy:${String(pi.vy).padStart(5)}  HP:${pi.health}`,
       `Enemy   state: ${ei.state.padEnd(9)}  vx:${String(ei.vx).padStart(5)}  vy:${String(ei.vy).padStart(5)}  HP:${ei.health}`,

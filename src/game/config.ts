@@ -5,6 +5,7 @@ import { PreloadScene }   from './scenes/PreloadScene';
 import { MainMenuScene }  from './scenes/MainMenuScene';
 import { FightScene }     from './scenes/FightScene';
 import { UIScene }        from './scenes/UIScene';
+import { SettingsScene }  from './scenes/SettingsScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -31,5 +32,5 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   input: {
     activePointers: 10,
   },
-  scene: [BootScene, PreloadScene, MainMenuScene, FightScene, UIScene],
+  scene: [BootScene, PreloadScene, MainMenuScene, FightScene, UIScene, SettingsScene],
 };

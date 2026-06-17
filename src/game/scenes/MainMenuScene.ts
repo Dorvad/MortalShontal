@@ -171,7 +171,7 @@ export class MainMenuScene extends Phaser.Scene {
     const menuItems: { label: string; y: number; action: () => void; primary?: boolean }[] = [
       { label: 'התחל משחק',  y: 310, action: () => this.startGame(), primary: true },
       { label: 'שני שחקנים', y: 348, action: () => { /* TODO */ } },
-      { label: 'הגדרות',     y: 382, action: () => { /* TODO */ } },
+      { label: 'הגדרות',     y: 382, action: () => this.openSettings() },
     ];
 
     menuItems.forEach(({ label, y, action, primary }) => {
@@ -294,6 +294,13 @@ export class MainMenuScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     this.gridOffset += delta * 0.009; // speed: ~9 grid-units per second
     this.drawHLines();
+  }
+
+  // ── Settings overlay ─────────────────────────────────────────────────────
+  private openSettings(): void {
+    if (!this.scene.isActive(SCENES.SETTINGS)) {
+      this.scene.launch(SCENES.SETTINGS);
+    }
   }
 
   // ── Transition to fight ──────────────────────────────────────────────────
