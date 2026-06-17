@@ -1,12 +1,13 @@
 import { FighterData } from '../fighters/FighterData';
 
-// Arava — high-res idle (192×192 frames), pixel-art walk (16×22 frames)
+// Arava — high-res sprites (192×192 frames, LINEAR filter)
 // Sprite sheet dimensions:
-//   arava_idle.png    — 1152×192, 6 frames × 192×192  (high-res, LINEAR filter)
-//   arava_walk.png    — 128×22,   8 frames × 16×22    (pixel-art, NEAREST filter)
+//   arava_idle.png    — 1152×192, 6 frames × 192×192
+//   arava_walk.png    — 1152×192, 6 frames × 192×192
+//   arava_block.png   — 192×192,  single image
 //   arava_hitstun.png — single image
 //
-// spriteDisplayHeight 190 → scale = 190/192 ≈ 0.99 for idle; character fills ~90% of frame → ~171px.
+// spriteDisplayHeight 190 → scale ≈ 0.99; character fills ~90% of frame → ~171px.
 
 export const aravaData: FighterData = {
   id: 'arava',
@@ -54,6 +55,8 @@ export const aravaData: FighterData = {
   spriteFrameOffsets: {
     // Idle — target centre = 192/2 = 96px; offsets = 96 - measured_content_cx
     arava_idle: [-3, -8, -2, 0, 2, 6],
+    // Walk — measured content centres per frame
+    arava_walk: [4, -4, 2, 0, 1, -2],
     // Light attack — windup leans left (+14), kick extends right (-5)
     arava_light_attack: [14, -5],
   },
@@ -65,7 +68,7 @@ export const aravaData: FighterData = {
   spriteFilter: 'linear',
   animFrames: {
     idle: { start: 0, end: 5, frameRate: 8,  repeat: -1 },  // 6 frames × 192×192
-    walk: { start: 0, end: 7, frameRate: 12, repeat: -1 },  // 8 frames × 16×22
-    // hitstun handled via registerSingle (arava_hitstun.png loaded as plain image)
+    walk: { start: 0, end: 5, frameRate: 12, repeat: -1 },  // 6 frames × 192×192
+    // block/hitstun handled via registerSingle (plain images)
   },
 };
