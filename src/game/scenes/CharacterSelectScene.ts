@@ -137,7 +137,7 @@ export class CharacterSelectScene extends Phaser.Scene {
           glow.setAlpha(0);
           spriteObj?.clearTint();
         })
-        .on('pointerdown', () => this.selectChar(char, cx, cardY, cardW, cardH));
+        .on('pointerdown', () => this.selectChar(char, cx, cardY, cardW, cardH, spriteObj));
     });
 
     // Centre VS divider
@@ -173,17 +173,32 @@ export class CharacterSelectScene extends Phaser.Scene {
     g.destroy();
   }
 
-  private selectChar(char: FighterData, cx: number, cy: number, w: number, h: number): void {
+  private selectChar(
+    char: FighterData,
+    cx: number, cy: number, w: number, h: number,
+    spriteObj?: Phaser.GameObjects.Sprite,
+  ): void {
     if (this.selecting) return;
     this.selecting = true;
 
     GameSettings.playerCharId = char.id;
 
-    // Flash the card white
-    const flash = this.add.rectangle(cx, cy, w, h, 0xffffff, 0.5).setDepth(10);
-    this.tweens.add({ targets: flash, alpha: 0, duration: 350, onComplete: () => flash.destroy() });
+    if (spriteObj) {
+      const baseScale = spriteObj.scaleX;
+      this.tweens.add({
+        targets: spriteObj,
+        scaleX: baseScale * 1.15,
+        scaleY: baseScale * 1.15,
+        duration: 160,
+        yoyo: true,
+        ease: 'Back.easeOut',
+      });
+    } else {
+      const flash = this.add.rectangle(cx, cy, w, h, 0xffffff, 0.5).setDepth(10);
+      this.tweens.add({ targets: flash, alpha: 0, duration: 350, onComplete: () => flash.destroy() });
+    }
 
-    this.time.delayedCall(450, () => {
+    this.time.delayedCall(350, () => {
       this.cameras.main.fadeOut(350, 0, 0, 0, (_: unknown, p: number) => {
         if (p === 1) {
           this.scene.stop(SCENES.UI);

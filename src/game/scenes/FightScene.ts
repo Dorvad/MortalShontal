@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import { Fighter } from '../fighters/Fighter';
 import { FighterInput } from '../fighters/FighterInput';
-import { CombatResolver } from '../combat/CombatResolver';
+import { CombatResolver, HitResult } from '../combat/CombatResolver';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
 import { AIInput }     from '../input/AIInput';
 import { emptyInput }  from '../input/InputState';
 import { GameSettings } from '../GameSettings';
+import { SoundManager } from '../audio/SoundManager';
 import {
   SCENES, GAME_WIDTH, GAME_HEIGHT, GROUND_Y, STAGE_LEFT, STAGE_RIGHT,
   DEBUG_KEY, HITSTOP_LIGHT, HITSTOP_HEAVY, HITSTOP_BLOCKED, ROUND_TIME,
@@ -25,9 +26,14 @@ export class FightScene extends Phaser.Scene {
   private debugKey!: Phaser.Input.Keyboard.Key;
   private debugPanel?: Phaser.GameObjects.Text;
 
-  private roundPhase: 'start' | 'fight' | 'ko' = 'start';
+  private roundPhase: 'start' | 'fight' | 'dying' | 'ko' = 'start';
   private roundTimer  = 0;   // ms countdown for round-start delay
   private matchTimer  = 0;   // seconds remaining in the round
+
+  private comboCount       = 0;
+  private comboTimer       = 0;   // ms, wall-clock countdown
+  private timeScale        = 1.0;
+  private activeDamageTexts: Phaser.GameObjects.Text[] = [];
 
   constructor() { super(SCENES.FIGHT); }
 
@@ -47,7 +53,6 @@ export class FightScene extends Phaser.Scene {
 
     this.debugKey = this.input.keyboard!.addKey(DEBUG_KEY as unknown as number);
 
-    // Debug panel — visible only in debug mode
     this.debugPanel = this.add.text(10, 65, '', {
       fontSize: '13px',
       color: '#00ff44',
@@ -59,10 +64,16 @@ export class FightScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setVisible(false);
 
-    this.roundPhase = 'start';
-    this.roundTimer = ROUND_START_DELAY;
-    this.matchTimer = ROUND_TIME;
+    this.roundPhase        = 'start';
+    this.roundTimer        = ROUND_START_DELAY;
+    this.matchTimer        = ROUND_TIME;
+    this.comboCount        = 0;
+    this.comboTimer        = 0;
+    this.timeScale         = 1.0;
+    this.activeDamageTexts = [];
     this.events.emit('roundStart');
+
+    SoundManager.play(this, 'bgm_fight');
   }
 
   private buildStage(): void {
@@ -86,8 +97,20 @@ export class FightScene extends Phaser.Scene {
     }
     if (this.roundPhase === 'ko') return;
 
-    // ── Match timer ───────────────────────────────────────────────────────────
-    if (!GameSettings.unlimitedTimer) {
+    // Time scale for slow-motion (set to 0.15 during dying phase)
+    const scaledDelta = delta * this.timeScale;
+
+    // Combo window — counts down in wall-clock time
+    if (this.comboCount > 0) {
+      this.comboTimer -= delta;
+      if (this.comboTimer <= 0) {
+        this.comboCount = 0;
+        this.events.emit('comboUpdate', 0);
+      }
+    }
+
+    // ── Match timer (only ticks during active fight) ──────────────────────────
+    if (this.roundPhase === 'fight' && !GameSettings.unlimitedTimer) {
       this.matchTimer -= delta / 1000;
       if (this.matchTimer <= 0) {
         this.matchTimer = 0;
@@ -100,30 +123,53 @@ export class FightScene extends Phaser.Scene {
     }
     this.events.emit('timerUpdate', GameSettings.unlimitedTimer ? null : Math.ceil(this.matchTimer));
 
-    // Debug toggle
-    if (Phaser.Input.Keyboard.JustDown(this.debugKey)) {
-      this.debugMode = !this.debugMode;
-      this.debugPanel?.setVisible(this.debugMode);
+    // Debug toggle (only during active fight)
+    if (this.roundPhase === 'fight') {
+      if (Phaser.Input.Keyboard.JustDown(this.debugKey)) {
+        this.debugMode = !this.debugMode;
+        this.debugPanel?.setVisible(this.debugMode);
+      }
     }
 
-    const input = this.playerInput.read();
-    const enemyInput = GameSettings.enemyAI
+    // Input — frozen during dying phase
+    const input = this.roundPhase === 'dying'
+      ? emptyInput()
+      : this.playerInput.read();
+    const enemyInput = (GameSettings.enemyAI && this.roundPhase === 'fight')
       ? this.ai.compute(delta, this.enemy, this.player)
       : emptyInput();
 
-    this.player.update(delta, input);
-    this.enemy.update(delta, enemyInput);
+    this.player.update(scaledDelta, input);
+    this.enemy.update(scaledDelta, enemyInput);
 
     // Face each other (only when not committed to an attack)
     this.faceOpponent(this.player, this.enemy);
     this.faceOpponent(this.enemy, this.player);
 
-    // Combat resolution + hitstop + screenshake
-    const p2e = this.combat.resolve(this.player, this.enemy);
-    const e2p = this.combat.resolve(this.enemy, this.player);
+    // Combat resolution — only process hits during active fight
+    if (this.roundPhase === 'fight') {
+      const p2e = this.combat.resolve(this.player, this.enemy);
+      const e2p = this.combat.resolve(this.enemy, this.player);
 
-    if (p2e) this.applyHitEffects(p2e.wasBlocked, p2e.attackId);
-    if (e2p) this.applyHitEffects(e2p.wasBlocked, e2p.attackId);
+      if (p2e) {
+        this.applyHitEffects(p2e, this.enemy);
+        if (!p2e.wasBlocked) {
+          this.comboCount++;
+          this.comboTimer = 1200;
+          this.events.emit('comboUpdate', this.comboCount);
+        } else {
+          this.comboCount = 0;
+          this.events.emit('comboUpdate', 0);
+        }
+      }
+      if (e2p) {
+        this.applyHitEffects(e2p, this.player);
+        if (!e2p.wasBlocked) {
+          this.comboCount = 0;
+          this.events.emit('comboUpdate', 0);
+        }
+      }
+    }
 
     this.player.updateDebug(this.debugMode);
     this.enemy.updateDebug(this.debugMode);
@@ -136,29 +182,75 @@ export class FightScene extends Phaser.Scene {
       enemyHP:  this.enemy.health,
     });
 
-    // KO check
-    if (this.player.health <= 0 || this.enemy.health <= 0) {
-      this.roundPhase = 'ko';
-      this.events.emit('ko', { playerWon: this.enemy.health <= 0, isTimeout: false });
+    // KO check — trigger slow-mo then emit 'ko' after 600ms
+    if (this.roundPhase === 'fight' && (this.player.health <= 0 || this.enemy.health <= 0)) {
+      this.roundPhase = 'dying';
+      this.timeScale  = 0.15;
+      const playerWon = this.enemy.health <= 0;
+      this.time.delayedCall(600, () => {
+        this.roundPhase = 'ko';
+        this.timeScale  = 1.0;
+        this.events.emit('ko', { playerWon, isTimeout: false });
+      });
     }
   }
 
-  private applyHitEffects(wasBlocked: boolean, attackId: string): void {
-    if (wasBlocked) {
+  private applyHitEffects(result: HitResult, defender: Fighter): void {
+    const isHeavy = result.attackId === 'heavy';
+
+    if (result.wasBlocked) {
       this.player.freeze(HITSTOP_BLOCKED);
       this.enemy.freeze(HITSTOP_BLOCKED);
+      SoundManager.play(this, 'sfx_block');
       return;
     }
 
-    const hitstop = attackId === 'heavy' ? HITSTOP_HEAVY : HITSTOP_LIGHT;
+    const hitstop = isHeavy ? HITSTOP_HEAVY : HITSTOP_LIGHT;
     this.player.freeze(hitstop);
     this.enemy.freeze(hitstop);
+    SoundManager.play(this, isHeavy ? 'sfx_hit_heavy' : 'sfx_hit_light');
 
-    if (attackId === 'heavy') {
+    if (isHeavy) {
       this.cameras.main.shake(90, 0.007);
     } else {
       this.cameras.main.shake(40, 0.003);
     }
+
+    // Hit sparks at contact point
+    const hitX = defender.x;
+    const hitY = defender.y - defender.data.hurtboxH / 2;
+    if (this.textures.exists('spark_px')) {
+      const emitter = this.add.particles(hitX, hitY, 'spark_px', {
+        speed: { min: 80, max: 220 },
+        lifespan: 280,
+        scale: { start: 0.6, end: 0 },
+        quantity: isHeavy ? 8 : 4,
+        tint: isHeavy ? [0xffffff, 0xffdd00] : [0xff8800, 0xffaa44],
+      });
+      this.time.delayedCall(300, () => emitter.destroy());
+    }
+
+    // Floating damage number
+    this.showDamageNumber(hitX, hitY - 20, result.damage);
+  }
+
+  private showDamageNumber(x: number, y: number, dmg: number): void {
+    if (this.activeDamageTexts.length >= 3) return;
+    const txt = this.add.text(x, y, String(dmg), {
+      fontSize: '22px', fontStyle: 'bold', color: '#ffff44',
+      stroke: '#000000', strokeThickness: 3,
+    }).setDepth(15).setOrigin(0.5);
+    this.activeDamageTexts.push(txt);
+    this.tweens.add({
+      targets: txt,
+      y: y - 55,
+      alpha: 0,
+      duration: 650,
+      onComplete: () => {
+        this.activeDamageTexts = this.activeDamageTexts.filter(t => t !== txt);
+        txt.destroy();
+      },
+    });
   }
 
   private faceOpponent(a: Fighter, b: Fighter): void {
@@ -196,6 +288,10 @@ export class FightScene extends Phaser.Scene {
   }
 
   restart(): void {
+    this.timeScale         = 1.0;
+    this.comboCount        = 0;
+    this.comboTimer        = 0;
+    this.activeDamageTexts = [];
     this.scene.restart();
   }
 }

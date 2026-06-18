@@ -58,6 +58,7 @@ export const aravaData: FighterData = {
     arava_jump_rise:    [1, -6],
     arava_jump_fall:    [7],
     arava_light_attack: [14, -5],
+    arava_heavy_attack: [0, -2, -3, -4],
   },
   spriteDisplayHeightOverrides: {
     // heavy frame is 1024×1536; character fills ~70% of height → 1536*0.70≈1075px real

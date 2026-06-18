@@ -57,9 +57,9 @@ export class PreloadScene extends Phaser.Scene {
     });
     // block — 192×192, single image (high-res)
     this.load.image('arava_block', 'assets/fighters/arava/arava_block.png');
-    // heavy attack — 4096×1536, 4 frames × 1024×1536 (high-res)
+    // heavy attack — 2048×768, 4 frames × 512×768 (resized for performance)
     this.load.spritesheet('arava_heavy', 'assets/fighters/arava/arava_heavy.png', {
-      frameWidth: 1024, frameHeight: 1536,
+      frameWidth: 512, frameHeight: 768,
     });
     // jump — 576×192, 3 frames × 192×192 (high-res)
     this.load.spritesheet('arava_jump', 'assets/fighters/arava/arava_jump.png', {
@@ -87,10 +87,24 @@ export class PreloadScene extends Phaser.Scene {
     const bar = this.add.rectangle(GAME_WIDTH / 2 - 150, GAME_HEIGHT / 2, 0,   20, 0x3399ff).setOrigin(0, 0.5);
     bg.setDepth(0); bar.setDepth(1);
 
+    const label = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20, '', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '9px',
+      color: '#555577',
+    }).setOrigin(0.5).setDepth(2);
+
     this.load.on('progress', (v: number) => bar.setSize(300 * v, 20));
+    this.load.on('fileprogress', (file: Phaser.Loader.File) => label.setText(file.key));
   }
 
   create(): void {
+    // Generate a tiny 4×4 white square for hit-spark particles
+    const g = this.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(0xffffff);
+    g.fillRect(0, 0, 4, 4);
+    g.generateTexture('spark_px', 4, 4);
+    g.destroy();
+
     this.scene.start(SCENES.MENU);
   }
 }

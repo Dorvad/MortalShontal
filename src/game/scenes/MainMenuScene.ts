@@ -168,15 +168,15 @@ export class MainMenuScene extends Phaser.Scene {
   // ── Main menu ────────────────────────────────────────────────────────────
   private createMenu(): void {
     const CX = GAME_WIDTH / 2;
-    const menuItems: { label: string; y: number; action: () => void; primary?: boolean }[] = [
-      { label: 'התחל משחק',  y: 310, action: () => this.startGame(), primary: true },
-      { label: 'שני שחקנים', y: 348, action: () => { /* TODO */ } },
-      { label: 'הגדרות',     y: 382, action: () => this.openSettings() },
+    const menuItems: { label: string; y: number; action: () => void; primary?: boolean; disabled?: boolean }[] = [
+      { label: 'התחל משחק',          y: 310, action: () => this.startGame(), primary: true },
+      { label: 'שני שחקנים (בקרוב)', y: 348, action: () => {}, disabled: true },
+      { label: 'הגדרות',             y: 382, action: () => this.openSettings() },
     ];
 
-    menuItems.forEach(({ label, y, action, primary }) => {
+    menuItems.forEach(({ label, y, action, primary, disabled }) => {
       const fontSize = primary ? '28px' : '23px';
-      const baseColor = primary ? '#ffd23f' : '#cfd0e8';
+      const baseColor = primary ? '#ffd23f' : disabled ? '#555566' : '#cfd0e8';
       const hoverColor = primary ? '#ffffff' : '#34e1eb';
 
       const txt = this.add.text(CX, y, label, {
@@ -188,7 +188,9 @@ export class MainMenuScene extends Phaser.Scene {
       })
         .setOrigin(0.5, 0.5)
         .setDepth(6)
-        .setInteractive({ useHandCursor: true });
+        .setAlpha(disabled ? 0.38 : 1);
+
+      if (!disabled) txt.setInteractive({ useHandCursor: true });
 
       if (primary) {
         // Blinking arrow selector
@@ -204,10 +206,12 @@ export class MainMenuScene extends Phaser.Scene {
         });
       }
 
-      txt
-        .on('pointerover',  () => { txt.setColor(hoverColor); txt.setScale(1.06); })
-        .on('pointerout',   () => { txt.setColor(baseColor);  txt.setScale(1);    })
-        .on('pointerdown',  () => action());
+      if (!disabled) {
+        txt
+          .on('pointerover',  () => { txt.setColor(hoverColor); txt.setScale(1.06); })
+          .on('pointerout',   () => { txt.setColor(baseColor);  txt.setScale(1);    })
+          .on('pointerdown',  () => action());
+      }
     });
   }
 

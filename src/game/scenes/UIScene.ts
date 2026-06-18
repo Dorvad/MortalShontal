@@ -15,17 +15,17 @@ export class UIScene extends Phaser.Scene {
   private playerBar!: HealthBar;
   private enemyBar!:  HealthBar;
 
-  private roundText!: Phaser.GameObjects.Text;   // top-center: FIGHT! / timer / YOU WIN/LOSE
-  private koText!:    Phaser.GameObjects.Text;   // center: K.O. / TIME!
-  private restartText!: Phaser.GameObjects.Text;
-
   private playerData!: FighterData;
   private enemyData!:  FighterData;
 
+  private roundText!:   Phaser.GameObjects.Text;
+  private koText!:      Phaser.GameObjects.Text;
+  private restartText!: Phaser.GameObjects.Text;
+  private comboText!:   Phaser.GameObjects.Text;
+
   private fightScene!: Phaser.Scene;
 
-  // State used to decide what the center-top text should show
-  private showingBanner = false;
+  private showingBanner  = false;
   private lastTimerValue: number | null = null;
 
   constructor() { super({ key: SCENES.UI, active: false }); }
@@ -72,6 +72,15 @@ export class UIScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(36).setVisible(false);
 
+    // Combo counter (below player health bar)
+    this.comboText = this.add.text(MARGIN, BAR_Y + BAR_H + 22, '', {
+      fontSize: '14px',
+      fontStyle: 'bold',
+      color: '#ff8800',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setScrollFactor(0).setDepth(35).setVisible(false);
+
     // ── Fullscreen toggle ──────────────────────────────────────────────────
     const fsBtn = this.add.text(GAME_WIDTH - 10, 8, '⛶', {
       fontSize: '22px', color: '#ffffffaa',
@@ -114,9 +123,17 @@ export class UIScene extends Phaser.Scene {
     this.fightScene.events.on('ko', (data: { playerWon: boolean; isTimeout: boolean }) => {
       this.showKO(data.playerWon, data.isTimeout);
     });
+
+    this.fightScene.events.on('comboUpdate', (count: number) => {
+      this.showCombo(count);
+    });
   }
 
-  // ── Show "FIGHT!" flash, then switch to timer display ──────────────────
+  update(_time: number, delta: number): void {
+    this.playerBar.update(delta);
+    this.enemyBar.update(delta);
+  }
+
   private showFight(): void {
     this.showingBanner = true;
     this.koText.setText('FIGHT!').setColor('#ff3b30').setVisible(true);
@@ -127,11 +144,9 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
-  // ── Update the centre-top timer text ───────────────────────────────────
   private applyTimerDisplay(): void {
     const secs = this.lastTimerValue;
     if (secs === null) {
-      // Unlimited timer — hide the top text
       this.roundText.setVisible(false);
     } else {
       const color = secs <= 10 ? '#ff3b30' : '#ffffff';
@@ -139,7 +154,6 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
-  // ── Show KO / timeout result ───────────────────────────────────────────
   private showKO(playerWon: boolean, isTimeout: boolean): void {
     this.showingBanner = true;
 
@@ -160,8 +174,21 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
+  private showCombo(count: number): void {
+    if (count < 2) {
+      this.comboText.setVisible(false);
+      return;
+    }
+    this.comboText.setText(`${count} HIT COMBO!`).setVisible(true).setScale(1);
+    this.tweens.add({
+      targets: this.comboText,
+      scaleX: 1.3, scaleY: 1.3,
+      duration: 80, yoyo: true,
+      ease: 'Back.easeOut',
+    });
+  }
+
   private openSettings(): void {
-    // Don't open twice
     if (this.scene.isActive(SCENES.SETTINGS)) return;
     this.scene.pause(SCENES.FIGHT);
     this.scene.launch(SCENES.SETTINGS, { fromFight: true });
@@ -171,6 +198,7 @@ export class UIScene extends Phaser.Scene {
     this.koText.setVisible(false);
     this.roundText.setVisible(false);
     this.restartText.setVisible(false);
+    this.comboText.setVisible(false);
     this.showingBanner  = false;
     this.lastTimerValue = null;
 
@@ -178,5 +206,6 @@ export class UIScene extends Phaser.Scene {
     this.enemyBar.setValue(this.enemyData.maxHealth);
 
     (this.scene.get(SCENES.FIGHT) as unknown as { restart: () => void }).restart();
+    this.cameras.main.fadeIn(400, 0, 0, 0);
   }
 }

@@ -4,6 +4,7 @@ import { rectsOverlap } from '../utils/rects';
 export interface HitResult {
   wasBlocked: boolean;
   attackId: string;
+  damage: number;
 }
 
 export class CombatResolver {
@@ -30,6 +31,7 @@ export class CombatResolver {
     return {
       wasBlocked: result === 'blocked',
       attackId:   hb.attackId,
+      damage:     hb.damage,
     };
   }
 }

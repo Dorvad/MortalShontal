@@ -485,7 +485,15 @@ export class Fighter {
     const targetH = this.data.spriteDisplayHeightOverrides?.[animKey]
       ?? this.data.spriteDisplayHeight ?? 110;
     const scale   = targetH / spr.frame.realHeight;
-    spr.setScale(scale);
+
+    // Landing squash-and-stretch
+    if (this.landingSquash > 0) {
+      const t = this.landingSquash / 5;
+      spr.setScale(scale * (1 + 0.12 * t), scale * (1 - 0.12 * t));
+      this.landingSquash = Math.max(0, this.landingSquash - dtFrames);
+    } else {
+      spr.setScale(scale);
+    }
     spr.setFlipX(this.facing === -1);
 
     // Hit / block tint feedback
@@ -498,9 +506,6 @@ export class Fighter {
     } else {
       spr.clearTint().setAlpha(1);
     }
-
-    // Consume landing squash timer (not visually applied to pixel-art sprite)
-    this.landingSquash = Math.max(0, this.landingSquash - dtFrames);
   }
 
   // Rectangle visual update: used for states without a sprite sheet yet.
@@ -551,22 +556,18 @@ export class Fighter {
   private syncBoxes(): void {
     const hw = this.data.hurtboxW / 2;
 
-    this.hurtbox.rect = {
-      x: this.x - hw + this.data.hurtboxOffsetX * this.facing,
-      y: this.y - this.data.hurtboxH + this.data.hurtboxOffsetY,
-      w: this.data.hurtboxW,
-      h: this.data.hurtboxH,
-    };
+    this.hurtbox.rect.x = this.x - hw + this.data.hurtboxOffsetX * this.facing;
+    this.hurtbox.rect.y = this.y - this.data.hurtboxH + this.data.hurtboxOffsetY;
+    this.hurtbox.rect.w = this.data.hurtboxW;
+    this.hurtbox.rect.h = this.data.hurtboxH;
     this.hurtbox.active = this.state !== 'knockdown';
 
     if (this.currentAttack && this.hitbox.active) {
       const off = this.currentAttack.hitboxOffset;
-      this.hitbox.rect = {
-        x: this.x + off.x * this.facing - (this.facing === -1 ? off.w : 0),
-        y: this.y + off.y,
-        w: off.w,
-        h: off.h,
-      };
+      this.hitbox.rect.x = this.x + off.x * this.facing - (this.facing === -1 ? off.w : 0);
+      this.hitbox.rect.y = this.y + off.y;
+      this.hitbox.rect.w = off.w;
+      this.hitbox.rect.h = off.h;
     }
   }
 

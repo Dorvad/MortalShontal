@@ -21,7 +21,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   render: {
     antialias:   true,
     antialiasGL: true,
-    roundPixels: false,
+    roundPixels: true,
   },
   physics: {
     default: 'arcade',

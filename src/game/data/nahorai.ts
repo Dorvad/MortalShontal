@@ -59,6 +59,7 @@ export const nahoraiData: FighterData = {
   },
   spriteKey: 'nahorai',
   spriteDisplayHeight: 170,
+  spriteFilter: 'linear',
   animFrames: {
     // Idle — use frames 0-3 only; frames 4-5 have severe drift / direction issues
     idle:         { start: 0, end: 3, frames: [0, 1, 2, 3], frameRate: 8,  repeat: -1 },

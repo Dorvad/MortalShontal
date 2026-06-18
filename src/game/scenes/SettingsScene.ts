@@ -5,7 +5,7 @@ import { GameSettings } from '../GameSettings';
 const CX = GAME_WIDTH  / 2;
 const CY = GAME_HEIGHT / 2;
 const PW = 420;
-const PH = 250;
+const PH = 300;
 
 const LABEL_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   fontFamily: '"Press Start 2P", monospace',
@@ -92,10 +92,10 @@ export class SettingsScene extends Phaser.Scene {
     this.refresh();
 
     // ── Close button ─────────────────────────────────────────────────────────
-    const closeBg = this.add.rectangle(CX, CY + PH / 2 - 30, 148, 34, 0x333366)
+    const closeBg = this.add.rectangle(CX, CY + PH / 2 - 68, 148, 34, 0x333366)
       .setOrigin(0.5).setDepth(2)
       .setInteractive({ useHandCursor: true });
-    const closeTxt = this.add.text(CX, CY + PH / 2 - 30, 'CLOSE', {
+    const closeTxt = this.add.text(CX, CY + PH / 2 - 68, 'CLOSE', {
       fontFamily: '"Press Start 2P", monospace',
       fontSize: '12px',
       color: '#ffffff',
@@ -105,6 +105,23 @@ export class SettingsScene extends Phaser.Scene {
       .on('pointerdown', () => this.close())
       .on('pointerover', () => { closeBg.setFillStyle(0x5555aa); closeTxt.setColor('#ffd23f'); })
       .on('pointerout',  () => { closeBg.setFillStyle(0x333366); closeTxt.setColor('#ffffff'); });
+
+    // ── Back to Character Select (only shown mid-fight) ───────────────────────
+    if (this.fromFight) {
+      const backBg = this.add.rectangle(CX, CY + PH / 2 - 26, 220, 34, 0x442200)
+        .setOrigin(0.5).setDepth(2)
+        .setInteractive({ useHandCursor: true });
+      const backTxt = this.add.text(CX, CY + PH / 2 - 26, 'חזרה לבחירה', {
+        fontFamily: '"Secular One", "Heebo", sans-serif',
+        fontSize: '14px',
+        color: '#ffaa44',
+      }).setOrigin(0.5).setDepth(3);
+
+      backBg
+        .on('pointerdown', () => this.backToSelect())
+        .on('pointerover', () => { backBg.setFillStyle(0x885500); backTxt.setColor('#ffd23f'); })
+        .on('pointerout',  () => { backBg.setFillStyle(0x442200); backTxt.setColor('#ffaa44'); });
+    }
 
     this.input.keyboard?.addKey('ESC').on('down', () => this.close());
   }
@@ -130,5 +147,12 @@ export class SettingsScene extends Phaser.Scene {
   private close(): void {
     if (this.fromFight) this.scene.resume(SCENES.FIGHT);
     this.scene.stop();
+  }
+
+  private backToSelect(): void {
+    this.scene.stop(SCENES.UI);
+    this.scene.stop(SCENES.FIGHT);
+    this.scene.stop();
+    this.scene.start(SCENES.SELECT);
   }
 }
