@@ -70,6 +70,16 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('arava_light2', 'assets/fighters/arava/arava_light2.png');
     // hitstun — 64×64, single image
     this.load.image('arava_hitstun', 'assets/fighters/arava/arava_hitstun.png');
+
+    // ── Tomer sprite sheets ──────────────────────────────────────────────────
+    // idle  — 768×192, 4 frames × 192×192
+    this.load.spritesheet('tomer_idle', 'assets/fighters/tomer/tomer_idle.png', {
+      frameWidth: 192, frameHeight: 192,
+    });
+    // walk  — 960×192, 5 frames × 192×192
+    this.load.spritesheet('tomer_walk', 'assets/fighters/tomer/tomer_walk.png', {
+      frameWidth: 192, frameHeight: 192,
+    });
     const ctrlPath = 'assets/ui/controls/';
     this.load.image('ctrl_btn',           ctrlPath + 'button_circle.png');
     this.load.image('ctrl_btn_hl',        ctrlPath + 'button_circle_highlight.png');

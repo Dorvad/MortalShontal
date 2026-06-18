@@ -2,10 +2,11 @@ import Phaser from 'phaser';
 import { SCENES, GAME_WIDTH, GAME_HEIGHT } from '../utils/constants';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
+import { tomerData }   from '../data/tomer';
 import { FighterData } from '../fighters/FighterData';
 import { GameSettings } from '../GameSettings';
 
-const CHARS: FighterData[] = [nahoraiData, aravaData];
+const CHARS: FighterData[] = [nahoraiData, aravaData, tomerData];
 
 export class CharacterSelectScene extends Phaser.Scene {
   private selecting = false;
@@ -66,9 +67,9 @@ export class CharacterSelectScene extends Phaser.Scene {
   }
 
   private createCharCards(): void {
-    const CX = [GAME_WIDTH * 0.265, GAME_WIDTH * 0.735];
+    const CX = [GAME_WIDTH * 0.185, GAME_WIDTH * 0.50, GAME_WIDTH * 0.815];
     const cardY = GAME_HEIGHT * 0.54;
-    const cardW = GAME_WIDTH  * 0.40;
+    const cardW = GAME_WIDTH  * 0.28;
     const cardH = GAME_HEIGHT * 0.82;
 
     CHARS.forEach((char, idx) => {
@@ -140,20 +141,15 @@ export class CharacterSelectScene extends Phaser.Scene {
         .on('pointerdown', () => this.selectChar(char, cx, cardY, cardW, cardH, spriteObj));
     });
 
-    // Centre VS divider
-    this.add.text(GAME_WIDTH / 2, cardY - cardH * 0.08, 'VS', {
-      fontFamily: '"Press Start 2P", monospace',
-      fontSize: '30px',
-      color: '#ff3b30',
-      shadow: { color: '#ff3b30', blur: 26, fill: true },
-    }).setOrigin(0.5, 0.5).setDepth(5);
-
-    const line = this.add.graphics().setDepth(2);
-    line.lineStyle(1, 0xff3b30, 0.35);
-    line.beginPath();
-    line.moveTo(GAME_WIDTH / 2, GAME_HEIGHT * 0.10);
-    line.lineTo(GAME_WIDTH / 2, GAME_HEIGHT * 0.96);
-    line.strokePath();
+    // Subtle separators between cards
+    const dividers = this.add.graphics().setDepth(2);
+    dividers.lineStyle(1, 0x334488, 0.45);
+    for (const sepX of [GAME_WIDTH * 0.345, GAME_WIDTH * 0.655]) {
+      dividers.beginPath();
+      dividers.moveTo(sepX, GAME_HEIGHT * 0.10);
+      dividers.lineTo(sepX, GAME_HEIGHT * 0.96);
+      dividers.strokePath();
+    }
   }
 
   private createFooter(): void {

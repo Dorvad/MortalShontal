@@ -4,6 +4,7 @@ import { FighterInput } from '../fighters/FighterInput';
 import { CombatResolver, HitResult } from '../combat/CombatResolver';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
+import { tomerData }   from '../data/tomer';
 import { AIInput }     from '../input/AIInput';
 import { emptyInput }  from '../input/InputState';
 import { GameSettings } from '../GameSettings';
@@ -40,9 +41,11 @@ export class FightScene extends Phaser.Scene {
   create(): void {
     this.buildStage();
 
-    const playerIsNahorai = GameSettings.playerCharId !== 'arava';
-    const playerData = playerIsNahorai ? nahoraiData : aravaData;
-    const enemyData  = playerIsNahorai ? aravaData   : nahoraiData;
+    const roster: Record<string, import('../fighters/FighterData').FighterData> = {
+      nahorai: nahoraiData, arava: aravaData, tomer: tomerData,
+    };
+    const playerData = roster[GameSettings.playerCharId] ?? nahoraiData;
+    const enemyData  = Object.values(roster).find(d => d.id !== playerData.id) ?? aravaData;
 
     this.player = new Fighter(this, playerData, 240,  1);
     this.enemy  = new Fighter(this, enemyData,  720, -1);

@@ -3,6 +3,7 @@ import { HealthBar } from '../ui/HealthBar';
 import { SCENES, GAME_WIDTH } from '../utils/constants';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
+import { tomerData }   from '../data/tomer';
 import { GameSettings } from '../GameSettings';
 import { FighterData }  from '../fighters/FighterData';
 
@@ -31,9 +32,11 @@ export class UIScene extends Phaser.Scene {
   constructor() { super({ key: SCENES.UI, active: false }); }
 
   create(): void {
-    const playerIsNahorai = GameSettings.playerCharId !== 'arava';
-    this.playerData = playerIsNahorai ? nahoraiData : aravaData;
-    this.enemyData  = playerIsNahorai ? aravaData   : nahoraiData;
+    const roster: Record<string, FighterData> = {
+      nahorai: nahoraiData, arava: aravaData, tomer: tomerData,
+    };
+    this.playerData = roster[GameSettings.playerCharId] ?? nahoraiData;
+    this.enemyData  = Object.values(roster).find(d => d.id !== this.playerData.id) ?? aravaData;
 
     this.playerBar = new HealthBar(this, MARGIN, BAR_Y, BAR_W, BAR_H, this.playerData.maxHealth, 0x3399ff);
     this.enemyBar  = new HealthBar(this, GAME_WIDTH - MARGIN, BAR_Y, BAR_W, BAR_H, this.enemyData.maxHealth, 0xff4444, true);
