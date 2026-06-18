@@ -156,26 +156,26 @@ export class MainMenuScene extends Phaser.Scene {
   private createHUD(): void {
     const style = (color: string) => ({
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '11px',
+      fontSize: '15px',
       color,
       lineSpacing: 6,
     });
-    this.add.text(34,  18, '1UP\n000000',   { ...style('#ff3b30'), align: 'left'   }).setDepth(6);
-    this.add.text(480, 18, 'HI-SCORE\n999990', { ...style('#ffd23f'), align: 'center' }).setOrigin(0.5, 0).setDepth(6);
-    this.add.text(926, 18, 'CREDIT\n00',    { ...style('#34e1eb'), align: 'right'  }).setOrigin(1, 0).setDepth(6);
+    this.add.text(45,              24, '1UP\n000000',      { ...style('#ff3b30'), align: 'left'   }).setDepth(6);
+    this.add.text(GAME_WIDTH / 2,  24, 'HI-SCORE\n999990', { ...style('#ffd23f'), align: 'center' }).setOrigin(0.5, 0).setDepth(6);
+    this.add.text(GAME_WIDTH - 45, 24, 'CREDIT\n00',       { ...style('#34e1eb'), align: 'right'  }).setOrigin(1, 0).setDepth(6);
   }
 
   // ── Main menu ────────────────────────────────────────────────────────────
   private createMenu(): void {
     const CX = GAME_WIDTH / 2;
     const menuItems: { label: string; y: number; action: () => void; primary?: boolean; disabled?: boolean }[] = [
-      { label: 'התחל משחק',          y: 310, action: () => this.startGame(), primary: true },
-      { label: 'שני שחקנים (בקרוב)', y: 348, action: () => {}, disabled: true },
-      { label: 'הגדרות',             y: 382, action: () => this.openSettings() },
+      { label: 'התחל משחק',          y: 413, action: () => this.startGame(), primary: true },
+      { label: 'שני שחקנים (בקרוב)', y: 464, action: () => {}, disabled: true },
+      { label: 'הגדרות',             y: 510, action: () => this.openSettings() },
     ];
 
     menuItems.forEach(({ label, y, action, primary, disabled }) => {
-      const fontSize = primary ? '28px' : '23px';
+      const fontSize = primary ? '37px' : '31px';
       const baseColor = primary ? '#ffd23f' : disabled ? '#555566' : '#cfd0e8';
       const hoverColor = primary ? '#ffffff' : '#34e1eb';
 
@@ -196,7 +196,7 @@ export class MainMenuScene extends Phaser.Scene {
         // Blinking arrow selector
         const arrow = this.add.text(CX - txt.width / 2 - 24, y, '◄', {
           fontFamily: '"Secular One", sans-serif',
-          fontSize: '22px',
+          fontSize: '29px',
           color: '#ff3b30',
         }).setOrigin(0.5, 0.5).setDepth(6);
 
@@ -219,7 +219,7 @@ export class MainMenuScene extends Phaser.Scene {
   private createPressStart(): void {
     const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.855, 'לחצו ENTER', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '20px',
+      fontSize: '27px',
       color: '#ffffff',
       shadow: { color: '#ff3b30', blur: 14, fill: true },
     }).setOrigin(0.5, 0.5).setDepth(6);
@@ -231,7 +231,7 @@ export class MainMenuScene extends Phaser.Scene {
 
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.89, 'הכנס אסימון  ·  INSERT COIN', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '10px',
+      fontSize: '13px',
       color: '#34e1eb',
       letterSpacing: 1,
     }).setOrigin(0.5, 0.5).setDepth(6);
@@ -241,7 +241,7 @@ export class MainMenuScene extends Phaser.Scene {
   private createCopyright(): void {
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.965, '© 1991 SHONTAL GAMES CORP.', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '8px',
+      fontSize: '11px',
       color: 'rgba(255,255,255,0.4)',
     }).setOrigin(0.5, 0.5).setDepth(6).setAlpha(0.4);
   }

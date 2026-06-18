@@ -53,8 +53,8 @@ export class FightScene extends Phaser.Scene {
     const playerData = roster[GameSettings.playerCharId] ?? nahoraiData;
     const enemyData  = Object.values(roster).find(d => d.id !== playerData.id) ?? aravaData;
 
-    this.player = new Fighter(this, playerData, 240,  1);
-    this.enemy  = new Fighter(this, enemyData,  720, -1);
+    this.player = new Fighter(this, playerData, 320,  1);
+    this.enemy  = new Fighter(this, enemyData,  960, -1);
 
     this.playerInput = new FighterInput(this, true, true);
     this.ai     = new AIInput();

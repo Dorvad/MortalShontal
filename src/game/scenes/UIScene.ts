@@ -7,10 +7,10 @@ import { tomerData }   from '../data/tomer';
 import { GameSettings } from '../GameSettings';
 import { FighterData }  from '../fighters/FighterData';
 
-const BAR_W  = 320;
-const BAR_H  = 22;
-const BAR_Y  = 24;
-const MARGIN = 20;
+const BAR_W  = 430;
+const BAR_H  = 28;
+const BAR_Y  = 32;
+const MARGIN = 28;
 
 export class UIScene extends Phaser.Scene {
   private playerBar!: HealthBar;
@@ -42,16 +42,16 @@ export class UIScene extends Phaser.Scene {
     this.enemyBar  = new HealthBar(this, GAME_WIDTH - MARGIN, BAR_Y, BAR_W, BAR_H, this.enemyData.maxHealth, 0xff4444, true);
 
     // Player name
-    this.add.text(MARGIN, BAR_Y + BAR_H + 4, this.playerData.displayName, { fontSize: '12px', color: '#aaaaff' })
+    this.add.text(MARGIN, BAR_Y + BAR_H + 4, this.playerData.displayName, { fontSize: '16px', color: '#aaaaff' })
       .setScrollFactor(0).setDepth(32);
 
     // Enemy name
-    this.add.text(GAME_WIDTH - MARGIN, BAR_Y + BAR_H + 4, this.enemyData.displayName, { fontSize: '12px', color: '#ffaaaa' })
+    this.add.text(GAME_WIDTH - MARGIN, BAR_Y + BAR_H + 4, this.enemyData.displayName, { fontSize: '16px', color: '#ffaaaa' })
       .setScrollFactor(0).setDepth(32).setOrigin(1, 0);
 
     // Centre-top text — shows FIGHT!, countdown, YOU WIN/LOSE
     this.roundText = this.add.text(GAME_WIDTH / 2, BAR_Y + BAR_H / 2, '', {
-      fontSize: '26px',
+      fontSize: '36px',
       color: '#ffffff',
       fontStyle: 'bold',
       stroke: '#000000',
@@ -59,8 +59,8 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5).setScrollFactor(0).setDepth(35).setVisible(false);
 
     // Large centre banner — K.O. / TIME! / FIGHT!
-    this.koText = this.add.text(GAME_WIDTH / 2, 200, '', {
-      fontSize: '72px',
+    this.koText = this.add.text(GAME_WIDTH / 2, 267, '', {
+      fontSize: '96px',
       color: '#ffff00',
       fontStyle: 'bold',
       stroke: '#000000',
@@ -68,16 +68,16 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0.5).setScrollFactor(0).setDepth(36).setVisible(false);
 
     // Restart prompt
-    this.restartText = this.add.text(GAME_WIDTH / 2, 300, 'Tap to restart', {
-      fontSize: '22px',
+    this.restartText = this.add.text(GAME_WIDTH / 2, 400, 'Tap to restart', {
+      fontSize: '28px',
       color: '#ffffff',
       stroke: '#000000',
       strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(36).setVisible(false);
 
     // Combo counter (below player health bar)
-    this.comboText = this.add.text(MARGIN, BAR_Y + BAR_H + 22, '', {
-      fontSize: '14px',
+    this.comboText = this.add.text(MARGIN, BAR_Y + BAR_H + 28, '', {
+      fontSize: '18px',
       fontStyle: 'bold',
       color: '#ff8800',
       stroke: '#000000',
@@ -86,7 +86,7 @@ export class UIScene extends Phaser.Scene {
 
     // ── Fullscreen toggle ──────────────────────────────────────────────────
     const fsBtn = this.add.text(GAME_WIDTH - 10, 8, '⛶', {
-      fontSize: '22px', color: '#ffffffaa',
+      fontSize: '29px', color: '#ffffffaa',
     })
       .setOrigin(1, 0).setScrollFactor(0).setDepth(40).setAlpha(0.55)
       .setInteractive(new Phaser.Geom.Rectangle(-30, -8, 58, 44), Phaser.Geom.Rectangle.Contains)
@@ -97,8 +97,8 @@ export class UIScene extends Phaser.Scene {
     this.input.keyboard?.addKey('F').on('down', () => this.scale.toggleFullscreen());
 
     // ── Settings button ────────────────────────────────────────────────────
-    const settingsBtn = this.add.text(GAME_WIDTH - 42, 8, '⚙', {
-      fontSize: '20px', color: '#ffffffaa',
+    const settingsBtn = this.add.text(GAME_WIDTH - 50, 8, '⚙', {
+      fontSize: '27px', color: '#ffffffaa',
     })
       .setOrigin(1, 0).setScrollFactor(0).setDepth(40).setAlpha(0.55)
       .setInteractive({ useHandCursor: true })

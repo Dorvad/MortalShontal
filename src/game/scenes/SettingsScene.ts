@@ -4,18 +4,18 @@ import { GameSettings } from '../GameSettings';
 
 const CX = GAME_WIDTH  / 2;
 const CY = GAME_HEIGHT / 2;
-const PW = 420;
-const PH = 300;
+const PW = 560;
+const PH = 400;
 
 const LABEL_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   fontFamily: '"Press Start 2P", monospace',
-  fontSize:   '12px',
+  fontSize:   '16px',
   color:      '#9999bb',
 };
 
 const TOGGLE_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   fontFamily: '"Press Start 2P", monospace',
-  fontSize:   '11px',
+  fontSize:   '15px',
   color:      '#ffffff',
 };
 
@@ -46,9 +46,9 @@ export class SettingsScene extends Phaser.Scene {
     g.strokeRect(CX - PW / 2, CY - PH / 2, PW, PH);
 
     // ── Title ────────────────────────────────────────────────────────────────
-    this.add.text(CX, CY - PH / 2 + 28, 'SETTINGS', {
+    this.add.text(CX, CY - PH / 2 + 36, 'SETTINGS', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '16px',
+      fontSize: '21px',
       color: '#ffffff',
       stroke: '#000000',
       strokeThickness: 3,
@@ -57,16 +57,16 @@ export class SettingsScene extends Phaser.Scene {
     // ── Divider ──────────────────────────────────────────────────────────────
     const g2 = this.add.graphics().setDepth(2);
     g2.lineStyle(1, 0x334488, 0.9);
-    g2.lineBetween(CX - PW / 2 + 20, CY - 62, CX + PW / 2 - 20, CY - 62);
+    g2.lineBetween(CX - PW / 2 + 26, CY - 82, CX + PW / 2 - 26, CY - 82);
 
     // ── Row 1: Timer ─────────────────────────────────────────────────────────
-    this.add.text(CX - PW / 2 + 24, CY - 32, 'TIMER', LABEL_STYLE)
+    this.add.text(CX - PW / 2 + 32, CY - 42, 'TIMER', LABEL_STYLE)
       .setOrigin(0, 0.5).setDepth(2);
 
-    this.timerBg = this.add.rectangle(CX + 80, CY - 32, 148, 32, 0x332200)
+    this.timerBg = this.add.rectangle(CX + 107, CY - 42, 197, 43, 0x332200)
       .setOrigin(0.5).setDepth(2)
       .setInteractive({ useHandCursor: true });
-    this.timerTxt = this.add.text(CX + 80, CY - 32, '', TOGGLE_STYLE)
+    this.timerTxt = this.add.text(CX + 107, CY - 42, '', TOGGLE_STYLE)
       .setOrigin(0.5).setDepth(3);
 
     this.timerBg
@@ -75,13 +75,13 @@ export class SettingsScene extends Phaser.Scene {
       .on('pointerout',  () => this.timerBg.setAlpha(1));
 
     // ── Row 2: Enemy AI ──────────────────────────────────────────────────────
-    this.add.text(CX - PW / 2 + 24, CY + 26, 'ENEMY AI', LABEL_STYLE)
+    this.add.text(CX - PW / 2 + 32, CY + 34, 'ENEMY AI', LABEL_STYLE)
       .setOrigin(0, 0.5).setDepth(2);
 
-    this.aiBg = this.add.rectangle(CX + 80, CY + 26, 148, 32, 0x003322)
+    this.aiBg = this.add.rectangle(CX + 107, CY + 34, 197, 43, 0x003322)
       .setOrigin(0.5).setDepth(2)
       .setInteractive({ useHandCursor: true });
-    this.aiTxt = this.add.text(CX + 80, CY + 26, '', TOGGLE_STYLE)
+    this.aiTxt = this.add.text(CX + 107, CY + 34, '', TOGGLE_STYLE)
       .setOrigin(0.5).setDepth(3);
 
     this.aiBg
@@ -92,12 +92,12 @@ export class SettingsScene extends Phaser.Scene {
     this.refresh();
 
     // ── Close button ─────────────────────────────────────────────────────────
-    const closeBg = this.add.rectangle(CX, CY + PH / 2 - 68, 148, 34, 0x333366)
+    const closeBg = this.add.rectangle(CX, CY + PH / 2 - 90, 197, 45, 0x333366)
       .setOrigin(0.5).setDepth(2)
       .setInteractive({ useHandCursor: true });
-    const closeTxt = this.add.text(CX, CY + PH / 2 - 68, 'CLOSE', {
+    const closeTxt = this.add.text(CX, CY + PH / 2 - 90, 'CLOSE', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '12px',
+      fontSize: '16px',
       color: '#ffffff',
     }).setOrigin(0.5).setDepth(3);
 
@@ -108,12 +108,12 @@ export class SettingsScene extends Phaser.Scene {
 
     // ── Back to Character Select (only shown mid-fight) ───────────────────────
     if (this.fromFight) {
-      const backBg = this.add.rectangle(CX, CY + PH / 2 - 26, 220, 34, 0x442200)
+      const backBg = this.add.rectangle(CX, CY + PH / 2 - 46, 293, 45, 0x442200)
         .setOrigin(0.5).setDepth(2)
         .setInteractive({ useHandCursor: true });
-      const backTxt = this.add.text(CX, CY + PH / 2 - 26, 'חזרה לבחירה', {
+      const backTxt = this.add.text(CX, CY + PH / 2 - 46, 'חזרה לבחירה', {
         fontFamily: '"Secular One", "Heebo", sans-serif',
-        fontSize: '14px',
+        fontSize: '19px',
         color: '#ffaa44',
       }).setOrigin(0.5).setDepth(3);
 

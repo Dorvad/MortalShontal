@@ -60,7 +60,7 @@ export class CharacterSelectScene extends Phaser.Scene {
   private createHeader(): void {
     this.add.text(GAME_WIDTH / 2, 30, 'SELECT YOUR FIGHTER', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '16px',
+      fontSize: '21px',
       color: '#ffd23f',
       shadow: { color: '#ff3b30', blur: 18, fill: true },
     }).setOrigin(0.5, 0.5).setDepth(5);
@@ -120,7 +120,7 @@ export class CharacterSelectScene extends Phaser.Scene {
       // Character name at top of card
       this.add.text(cx, cardY - cardH * 0.44, char.displayName.toUpperCase(), {
         fontFamily: '"Press Start 2P", monospace',
-        fontSize: '13px',
+        fontSize: '17px',
         color: '#ffffff',
         shadow: { color: '#000000', blur: 6, fill: true },
       }).setOrigin(0.5, 0.5).setDepth(5);
@@ -155,7 +155,7 @@ export class CharacterSelectScene extends Phaser.Scene {
   private createFooter(): void {
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.975, 'ESC — BACK TO MENU', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '7px',
+      fontSize: '9px',
       color: 'rgba(255,255,255,0.32)',
     }).setOrigin(0.5, 1).setDepth(5);
   }

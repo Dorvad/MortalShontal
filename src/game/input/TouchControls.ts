@@ -12,9 +12,9 @@ export class TouchControls {
   private btnBlock: TouchButton;
 
   constructor(scene: Phaser.Scene) {
-    const pad   = 24;
-    const size  = 88;   // display size for all buttons
-    const gap   = 8;
+    const pad   = 32;
+    const size  = 118;  // display size for all buttons
+    const gap   = 10;
     const bottom = GAME_HEIGHT - pad - size / 2;
 
     // Left side: directional buttons + jump above
