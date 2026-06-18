@@ -205,6 +205,19 @@ export class Fighter {
     this.sprite = this.scene.add.sprite(this.x, this.y, firstTex)
       .setOrigin(0.5, 1)
       .setDepth(6);
+
+    // Prime the sprite to idle at the correct scale and facing direction so it
+    // renders properly before Fighter.update() is first called (e.g. during the
+    // round-start delay).  Without this, the frame realHeight is 1 → massive scale.
+    const idleKey = `${k}_idle`;
+    if (this.spriteAnims.has(idleKey)) {
+      this.sprite.play(idleKey);
+      const targetH = this.data.spriteDisplayHeight ?? 110;
+      const scale   = targetH / this.sprite.frame.realHeight;
+      this.sprite.setScale(scale);
+    }
+    this.sprite.setFlipX(this.facing === -1);
+    this.rect.setVisible(false);
   }
 
   // Returns the Phaser animation key for the current state, or null (→ rect).

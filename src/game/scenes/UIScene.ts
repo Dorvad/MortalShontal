@@ -89,7 +89,7 @@ export class UIScene extends Phaser.Scene {
       fontSize: '22px', color: '#ffffffaa',
     })
       .setOrigin(1, 0).setScrollFactor(0).setDepth(40).setAlpha(0.55)
-      .setInteractive({ useHandCursor: true })
+      .setInteractive(new Phaser.Geom.Rectangle(-30, -8, 58, 44), Phaser.Geom.Rectangle.Contains)
       .on('pointerdown', () => this.scale.toggleFullscreen())
       .on('pointerover', () => fsBtn.setAlpha(1))
       .on('pointerout',  () => fsBtn.setAlpha(0.55));
