@@ -86,6 +86,8 @@ export class PreloadScene extends Phaser.Scene {
     });
     // dumbbell projectile — 86×56
     this.load.image('tomer_dumbbell', 'assets/fighters/tomer/tomer_dumbbell.png');
+    // block — 256×256, single image
+    this.load.image('tomer_block', 'assets/fighters/tomer/tomer_block.png');
     const ctrlPath = 'assets/ui/controls/';
     this.load.image('ctrl_btn',           ctrlPath + 'button_circle.png');
     this.load.image('ctrl_btn_hl',        ctrlPath + 'button_circle_highlight.png');
