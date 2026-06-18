@@ -139,11 +139,11 @@ export class MainMenuScene extends Phaser.Scene {
 
   // ── Logo ────────────────────────────────────────────────────────────────
   private createLogo(): void {
-    const logoW = GAME_WIDTH * 0.41;
+    const logoW = GAME_WIDTH * 0.54;
     const logo  = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT * 0.05, 'menu_logo')
       .setOrigin(0.5, 0)
       .setDepth(5)
-      .setDisplaySize(logoW, logoW * (1086 / 1448));
+      .setDisplaySize(logoW, logoW * (941 / 1672));
 
     // Glow-pulse: gentle alpha oscillation standing in for CSS drop-shadow animation
     this.tweens.add({
