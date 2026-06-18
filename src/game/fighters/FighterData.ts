@@ -3,6 +3,7 @@ import { AttackData } from '../combat/AttackData';
 export interface FighterData {
   id: string;
   displayName: string;
+  subtitle?: string;
   maxHealth: number;
   walkSpeed: number;
   jumpVelocity: number;

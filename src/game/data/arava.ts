@@ -12,6 +12,7 @@ import { FighterData } from '../fighters/FighterData';
 export const aravaData: FighterData = {
   id: 'arava',
   displayName: 'Arava',
+  subtitle: 'נוודת הפסטיבל',
   maxHealth: 100,
   walkSpeed: 260,
   jumpVelocity: -760,

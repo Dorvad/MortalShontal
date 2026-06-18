@@ -7,10 +7,11 @@ import { tomerData }   from '../data/tomer';
 import { GameSettings } from '../GameSettings';
 import { FighterData }  from '../fighters/FighterData';
 
-const BAR_W  = 430;
-const BAR_H  = 28;
-const BAR_Y  = 32;
-const MARGIN = 28;
+const BAR_W  = 320;
+const BAR_H  = 22;
+const BAR_Y  = 10;
+const MARGIN = 12;
+const AVATAR = 40;
 
 export class UIScene extends Phaser.Scene {
   private playerBar!: HealthBar;
@@ -23,6 +24,7 @@ export class UIScene extends Phaser.Scene {
   private koText!:      Phaser.GameObjects.Text;
   private restartText!: Phaser.GameObjects.Text;
   private comboText!:   Phaser.GameObjects.Text;
+  private comboCount!:  Phaser.GameObjects.Text;
 
   private fightScene!: Phaser.Scene;
 
@@ -38,98 +40,124 @@ export class UIScene extends Phaser.Scene {
     this.playerData = roster[GameSettings.playerCharId] ?? nahoraiData;
     this.enemyData  = Object.values(roster).find(d => d.id !== this.playerData.id) ?? aravaData;
 
-    this.playerBar = new HealthBar(this, MARGIN, BAR_Y, BAR_W, BAR_H, this.playerData.maxHealth, 0x3399ff);
-    this.enemyBar  = new HealthBar(this, GAME_WIDTH - MARGIN, BAR_Y, BAR_W, BAR_H, this.enemyData.maxHealth, 0xff4444, true);
+    // ── Player HUD (left side) ────────────────────────────────────────────────
+    const playerBarX = MARGIN + AVATAR + 6;
+    this.buildAvatar(MARGIN, BAR_Y, AVATAR, this.playerData, false);
+    this.add.text(playerBarX, BAR_Y - 1, this.playerData.displayName, {
+      fontFamily: '"Secular One", "Heebo", sans-serif',
+      fontSize: '14px', color: '#cfe6ff',
+      shadow: { color: '#000000', blur: 4, fill: true },
+    }).setScrollFactor(0).setDepth(32);
+    this.playerBar = new HealthBar(this, playerBarX, BAR_Y + 16, BAR_W, BAR_H, this.playerData.maxHealth, 0xe8332e, false);
 
-    // Player name
-    this.add.text(MARGIN, BAR_Y + BAR_H + 4, this.playerData.displayName, { fontSize: '16px', color: '#aaaaff' })
-      .setScrollFactor(0).setDepth(32);
+    // ── Enemy HUD (right side) ────────────────────────────────────────────────
+    const enemyBarX = GAME_WIDTH - MARGIN - AVATAR - 6;
+    this.buildAvatar(GAME_WIDTH - MARGIN - AVATAR, BAR_Y, AVATAR, this.enemyData, true);
+    this.add.text(enemyBarX, BAR_Y - 1, this.enemyData.displayName, {
+      fontFamily: '"Secular One", "Heebo", sans-serif',
+      fontSize: '14px', color: '#ffcece',
+      shadow: { color: '#000000', blur: 4, fill: true },
+    }).setScrollFactor(0).setDepth(32).setOrigin(1, 0);
+    this.enemyBar = new HealthBar(this, enemyBarX, BAR_Y + 16, BAR_W, BAR_H, this.enemyData.maxHealth, 0xe8332e, true);
 
-    // Enemy name
-    this.add.text(GAME_WIDTH - MARGIN, BAR_Y + BAR_H + 4, this.enemyData.displayName, { fontSize: '16px', color: '#ffaaaa' })
-      .setScrollFactor(0).setDepth(32).setOrigin(1, 0);
-
-    // Centre-top text — shows FIGHT!, countdown, YOU WIN/LOSE
-    this.roundText = this.add.text(GAME_WIDTH / 2, BAR_Y + BAR_H / 2, '', {
-      fontSize: '36px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 4,
+    // ── Centre timer ──────────────────────────────────────────────────────────
+    this.roundText = this.add.text(GAME_WIDTH / 2, BAR_Y + BAR_H / 2 + 6, '', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '28px', color: '#ffffff',
+      stroke: '#000000', strokeThickness: 4,
+      shadow: { color: 'rgba(255,210,63,.7)', blur: 10, fill: true },
     }).setOrigin(0.5).setScrollFactor(0).setDepth(35).setVisible(false);
 
-    // Large centre banner — K.O. / TIME! / FIGHT!
-    this.koText = this.add.text(GAME_WIDTH / 2, 267, '', {
-      fontSize: '96px',
-      color: '#ffff00',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 6,
+    // ── KO / FIGHT banner ─────────────────────────────────────────────────────
+    this.koText = this.add.text(GAME_WIDTH / 2, 200, '', {
+      fontFamily: '"Secular One", "Heebo", sans-serif',
+      fontSize: '88px', color: '#ffd23f',
+      stroke: '#0a0a0f', strokeThickness: 6,
+      shadow: { color: '#e8332e', blur: 0, fill: false, offsetX: 5, offsetY: 5 },
     }).setOrigin(0.5).setScrollFactor(0).setDepth(36).setVisible(false);
 
-    // Restart prompt
-    this.restartText = this.add.text(GAME_WIDTH / 2, 400, 'Tap to restart', {
-      fontSize: '28px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 3,
+    this.restartText = this.add.text(GAME_WIDTH / 2, 300, 'לחצו להמשך', {
+      fontFamily: '"Secular One", "Heebo", sans-serif',
+      fontSize: '22px', color: '#ffffff',
+      stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(36).setVisible(false);
 
-    // Combo counter (below player health bar)
-    this.comboText = this.add.text(MARGIN, BAR_Y + BAR_H + 28, '', {
-      fontSize: '18px',
-      fontStyle: 'bold',
-      color: '#ff8800',
-      stroke: '#000000',
-      strokeThickness: 3,
-    }).setScrollFactor(0).setDepth(35).setVisible(false);
+    // ── Combo counter (rotated, arcade-style) ─────────────────────────────────
+    this.comboCount = this.add.text(MARGIN + AVATAR + 6, BAR_Y + BAR_H + 30, '', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '30px', color: '#ffffff',
+      stroke: '#e8332e', strokeThickness: 3,
+    }).setScrollFactor(0).setDepth(35).setVisible(false).setAngle(-4);
 
-    // ── Fullscreen toggle ──────────────────────────────────────────────────
+    this.comboText = this.add.text(MARGIN + AVATAR + 6, BAR_Y + BAR_H + 66, '', {
+      fontFamily: '"Secular One", "Heebo", sans-serif',
+      fontSize: '18px', color: '#ffd23f',
+      stroke: '#000000', strokeThickness: 3,
+    }).setScrollFactor(0).setDepth(35).setVisible(false).setAngle(-4);
+
+    // ── Fullscreen toggle ─────────────────────────────────────────────────────
     const fsBtn = this.add.text(GAME_WIDTH - 10, 8, '⛶', {
-      fontSize: '29px', color: '#ffffffaa',
+      fontSize: '22px', color: '#ffffffaa',
     })
       .setOrigin(1, 0).setScrollFactor(0).setDepth(40).setAlpha(0.55)
       .setInteractive(new Phaser.Geom.Rectangle(-30, -8, 58, 44), Phaser.Geom.Rectangle.Contains)
       .on('pointerdown', () => this.scale.toggleFullscreen())
       .on('pointerover', () => fsBtn.setAlpha(1))
       .on('pointerout',  () => fsBtn.setAlpha(0.55));
-
     this.input.keyboard?.addKey('F').on('down', () => this.scale.toggleFullscreen());
 
-    // ── Settings button ────────────────────────────────────────────────────
-    const settingsBtn = this.add.text(GAME_WIDTH - 50, 8, '⚙', {
-      fontSize: '27px', color: '#ffffffaa',
+    // ── Settings button ───────────────────────────────────────────────────────
+    const settingsBtn = this.add.text(GAME_WIDTH - 42, 8, '⚙', {
+      fontSize: '20px', color: '#ffffffaa',
     })
       .setOrigin(1, 0).setScrollFactor(0).setDepth(40).setAlpha(0.55)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.openSettings())
       .on('pointerover', () => settingsBtn.setAlpha(1))
       .on('pointerout',  () => settingsBtn.setAlpha(0.55));
-
     this.input.keyboard?.addKey('ESC').on('down', () => this.openSettings());
 
-    // ── FightScene event bridge ────────────────────────────────────────────
+    // ── FightScene event bridge ───────────────────────────────────────────────
     this.fightScene = this.scene.get(SCENES.FIGHT);
-
     this.fightScene.events.on('roundStart', () => this.showFight());
-
     this.fightScene.events.on('healthUpdate', (data: { playerHP: number; enemyHP: number }) => {
       this.playerBar.setValue(data.playerHP);
       this.enemyBar.setValue(data.enemyHP);
     });
-
     this.fightScene.events.on('timerUpdate', (secs: number | null) => {
       this.lastTimerValue = secs;
       if (!this.showingBanner) this.applyTimerDisplay();
     });
-
     this.fightScene.events.on('ko', (data: { playerWon: boolean; isTimeout: boolean }) => {
       this.showKO(data.playerWon, data.isTimeout);
     });
-
     this.fightScene.events.on('comboUpdate', (count: number) => {
       this.showCombo(count);
     });
+  }
+
+  private buildAvatar(x: number, y: number, size: number, data: FighterData, flipX: boolean): void {
+    const g = this.add.graphics().setScrollFactor(0).setDepth(31);
+    const r   = (data.color >> 16) & 0xff;
+    const bgC = r > 0x80 ? 0x2e1414 : 0x16202e;
+    g.fillStyle(bgC, 1);
+    g.fillRect(x, y, size, size);
+    g.lineStyle(2, 0x0a0a0f, 1);
+    g.strokeRect(x, y, size, size);
+
+    const idleKey = data.spriteKey ? `${data.spriteKey}_idle` : '';
+    if (idleKey && this.textures.exists(idleKey)) {
+      const spr = this.add.sprite(x + size / 2, y + size, idleKey)
+        .setOrigin(0.5, 1).setScrollFactor(0).setDepth(32).setFlipX(flipX);
+      const targetH = data.spriteDisplayHeight ?? 100;
+      spr.setScale((size + 10) / targetH);
+      const mask = this.make.graphics({ x: 0, y: 0 });
+      mask.fillRect(x, y, size, size);
+      spr.setMask(mask.createGeometryMask());
+    } else {
+      g.fillStyle(data.color, 0.6);
+      g.fillRect(x + 6, y + 6, size - 12, size - 12);
+    }
   }
 
   update(_time: number, delta: number): void {
@@ -139,7 +167,9 @@ export class UIScene extends Phaser.Scene {
 
   private showFight(): void {
     this.showingBanner = true;
-    this.koText.setText('FIGHT!').setColor('#ff3b30').setVisible(true);
+    this.koText
+      .setStyle({ fontFamily: '"Press Start 2P", monospace', fontSize: '52px' })
+      .setText('FIGHT!').setColor('#ff3b30').setVisible(true);
     this.time.delayedCall(1300, () => {
       this.koText.setVisible(false);
       this.showingBanner = false;
@@ -152,22 +182,24 @@ export class UIScene extends Phaser.Scene {
     if (secs === null) {
       this.roundText.setVisible(false);
     } else {
-      const color = secs <= 10 ? '#ff3b30' : '#ffffff';
-      this.roundText.setText(String(secs)).setColor(color).setVisible(true);
+      this.roundText.setText(String(secs))
+        .setColor(secs <= 10 ? '#ff3b30' : '#ffffff')
+        .setVisible(true);
     }
   }
 
   private showKO(playerWon: boolean, isTimeout: boolean): void {
     this.showingBanner = true;
-
     if (isTimeout) {
-      this.koText.setText('TIME!').setColor('#ff9900').setVisible(true);
+      this.koText.setStyle({ fontFamily: '"Press Start 2P", monospace', fontSize: '52px' })
+        .setText('TIME!').setColor('#ff9900').setVisible(true);
     } else {
-      this.koText.setText('K.O.').setColor('#ffff00').setVisible(true);
+      this.koText.setStyle({ fontFamily: '"Secular One", "Heebo", sans-serif', fontSize: '88px' })
+        .setText(playerWon ? 'ניצחון!' : 'הפסדת!').setColor('#ffd23f').setVisible(true);
     }
-
-    const resultColor = playerWon ? '#00ff88' : '#ff4444';
-    this.roundText.setText(playerWon ? 'YOU WIN!' : 'YOU LOSE!').setColor(resultColor).setVisible(true);
+    this.roundText
+      .setText(playerWon ? 'YOU WIN!' : 'YOU LOSE!')
+      .setColor(playerWon ? '#00ff88' : '#ff4444').setVisible(true);
     this.restartText.setVisible(true);
 
     this.time.delayedCall(400, () => {
@@ -179,12 +211,14 @@ export class UIScene extends Phaser.Scene {
 
   private showCombo(count: number): void {
     if (count < 2) {
+      this.comboCount.setVisible(false);
       this.comboText.setVisible(false);
       return;
     }
-    this.comboText.setText(`${count} HIT COMBO!`).setVisible(true).setScale(1);
+    this.comboCount.setText(String(count)).setVisible(true);
+    this.comboText.setText('קומבו!').setVisible(true);
     this.tweens.add({
-      targets: this.comboText,
+      targets: [this.comboCount, this.comboText],
       scaleX: 1.3, scaleY: 1.3,
       duration: 80, yoyo: true,
       ease: 'Back.easeOut',
@@ -201,6 +235,7 @@ export class UIScene extends Phaser.Scene {
     this.koText.setVisible(false);
     this.roundText.setVisible(false);
     this.restartText.setVisible(false);
+    this.comboCount.setVisible(false);
     this.comboText.setVisible(false);
     this.showingBanner  = false;
     this.lastTimerValue = null;

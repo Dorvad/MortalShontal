@@ -6,24 +6,17 @@ const CX = GAME_WIDTH  / 2;
 const CY = GAME_HEIGHT / 2;
 const PW = 560;
 const PH = 400;
-
-const LABEL_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: '"Press Start 2P", monospace',
-  fontSize:   '16px',
-  color:      '#9999bb',
-};
-
-const TOGGLE_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: '"Press Start 2P", monospace',
-  fontSize:   '15px',
-  color:      '#ffffff',
-};
+// Derived: header = 52px, body starts at CY - PH/2 + 52 + 22, row spacing = 52
+const BODY_TOP = (ph: number) => CY - ph / 2 + 52 + 22;
+const BTN_X    = CX + 90;   // toggle button centre-x
+const BTN_W    = 197;
+const BTN_H    = 40;
 
 export class SettingsScene extends Phaser.Scene {
   private fromFight  = false;
-  private timerBg!:  Phaser.GameObjects.Rectangle;
+  private timerBg!:  Phaser.GameObjects.Graphics;
   private timerTxt!: Phaser.GameObjects.Text;
-  private aiBg!:     Phaser.GameObjects.Rectangle;
+  private aiBg!:     Phaser.GameObjects.Graphics;
   private aiTxt!:    Phaser.GameObjects.Text;
 
   constructor() { super(SCENES.SETTINGS); }
@@ -33,115 +26,148 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   create(): void {
-    // ── Full-screen backdrop ────────────────────────────────────────────────
-    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.80)
+    // Full-screen backdrop
+    this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.82)
       .setOrigin(0, 0).setDepth(0);
 
-    // ── Panel fill ──────────────────────────────────────────────────────────
-    this.add.rectangle(CX, CY, PW, PH, 0x0d0b28).setOrigin(0.5).setDepth(1);
+    // Panel fill
+    const panelBg = this.add.graphics().setDepth(1);
+    panelBg.fillGradientStyle(0x1a0a1e, 0x1a0a1e, 0x0c0610, 0x0c0610, 1);
+    panelBg.fillRect(CX - PW / 2, CY - PH / 2, PW, PH);
+    panelBg.lineStyle(3, 0x0a0a0f, 1);
+    panelBg.strokeRect(CX - PW / 2, CY - PH / 2, PW, PH);
+    panelBg.lineStyle(1, 0x4455cc, 0.6);
+    panelBg.strokeRect(CX - PW / 2 + 3, CY - PH / 2 + 3, PW - 6, PH - 6);
 
-    // ── Panel border (drawn with Graphics) ──────────────────────────────────
-    const g = this.add.graphics().setDepth(1);
-    g.lineStyle(2, 0x4455cc, 1);
-    g.strokeRect(CX - PW / 2, CY - PH / 2, PW, PH);
+    // Header strip
+    const hdrBg = this.add.graphics().setDepth(2);
+    hdrBg.fillGradientStyle(0x26122e, 0x26122e, 0x16091b, 0x16091b, 1);
+    hdrBg.fillRect(CX - PW / 2, CY - PH / 2, PW, 52);
+    hdrBg.lineStyle(3, 0x0a0a0f, 1);
+    hdrBg.lineBetween(CX - PW / 2, CY - PH / 2 + 52, CX + PW / 2, CY - PH / 2 + 52);
 
-    // ── Title ────────────────────────────────────────────────────────────────
-    this.add.text(CX, CY - PH / 2 + 36, 'SETTINGS', {
-      fontFamily: '"Press Start 2P", monospace',
-      fontSize: '21px',
+    this.add.text(CX - PW / 2 + 20, CY - PH / 2 + 26, '⚙', {
+      fontSize: '22px', color: '#ffd23f',
+    }).setOrigin(0, 0.5).setDepth(3);
+    this.add.text(CX - PW / 2 + 52, CY - PH / 2 + 26, 'הגדרות', {
+      fontFamily: '"Secular One", "Heebo", sans-serif',
+      fontSize: '22px',
       color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(2);
+      shadow: { color: '#b23a5e', blur: 6, fill: false, offsetX: 2, offsetY: 2 },
+    }).setOrigin(0, 0.5).setDepth(3);
 
-    // ── Divider ──────────────────────────────────────────────────────────────
-    const g2 = this.add.graphics().setDepth(2);
-    g2.lineStyle(1, 0x334488, 0.9);
-    g2.lineBetween(CX - PW / 2 + 26, CY - 82, CX + PW / 2 - 26, CY - 82);
+    const bodyTop = BODY_TOP(PH);
 
-    // ── Row 1: Timer ─────────────────────────────────────────────────────────
-    this.add.text(CX - PW / 2 + 32, CY - 42, 'TIMER', LABEL_STYLE)
-      .setOrigin(0, 0.5).setDepth(2);
+    // ── Row 1: Timer ──────────────────────────────────────────────────────────
+    const timerY = bodyTop + 52 * 0;
+    this.add.text(CX - PW / 2 + 24, timerY, 'TIMER', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '12px', color: '#9999bb',
+    }).setOrigin(0, 0.5).setDepth(3);
 
-    this.timerBg = this.add.rectangle(CX + 107, CY - 42, 197, 43, 0x332200)
-      .setOrigin(0.5).setDepth(2)
-      .setInteractive({ useHandCursor: true });
-    this.timerTxt = this.add.text(CX + 107, CY - 42, '', TOGGLE_STYLE)
-      .setOrigin(0.5).setDepth(3);
+    this.timerBg  = this.add.graphics().setDepth(3);
+    this.timerTxt = this.add.text(BTN_X, timerY, '', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '11px', color: '#ffffff',
+    }).setOrigin(0.5, 0.5).setDepth(4);
 
-    this.timerBg
-      .on('pointerdown', () => { GameSettings.unlimitedTimer = !GameSettings.unlimitedTimer; this.refresh(); })
-      .on('pointerover', () => this.timerBg.setAlpha(0.75))
-      .on('pointerout',  () => this.timerBg.setAlpha(1));
+    const timerHit = this.add.rectangle(BTN_X, timerY, BTN_W, BTN_H, 0x000000, 0)
+      .setDepth(5).setInteractive({ useHandCursor: true });
+    timerHit.on('pointerdown', () => { GameSettings.unlimitedTimer = !GameSettings.unlimitedTimer; this.refresh(); });
+    timerHit.on('pointerover', () => this.timerBg.setAlpha(0.75));
+    timerHit.on('pointerout',  () => this.timerBg.setAlpha(1));
 
-    // ── Row 2: Enemy AI ──────────────────────────────────────────────────────
-    this.add.text(CX - PW / 2 + 32, CY + 34, 'ENEMY AI', LABEL_STYLE)
-      .setOrigin(0, 0.5).setDepth(2);
+    // ── Row 2: Enemy AI ───────────────────────────────────────────────────────
+    const aiY = bodyTop + 52 * 1;
+    this.add.text(CX - PW / 2 + 24, aiY, 'ENEMY AI', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '12px', color: '#9999bb',
+    }).setOrigin(0, 0.5).setDepth(3);
 
-    this.aiBg = this.add.rectangle(CX + 107, CY + 34, 197, 43, 0x003322)
-      .setOrigin(0.5).setDepth(2)
-      .setInteractive({ useHandCursor: true });
-    this.aiTxt = this.add.text(CX + 107, CY + 34, '', TOGGLE_STYLE)
-      .setOrigin(0.5).setDepth(3);
+    this.aiBg  = this.add.graphics().setDepth(3);
+    this.aiTxt = this.add.text(BTN_X, aiY, '', {
+      fontFamily: '"Press Start 2P", monospace',
+      fontSize: '11px', color: '#ffffff',
+    }).setOrigin(0.5, 0.5).setDepth(4);
 
-    this.aiBg
-      .on('pointerdown', () => { GameSettings.enemyAI = !GameSettings.enemyAI; this.refresh(); })
-      .on('pointerover', () => this.aiBg.setAlpha(0.75))
-      .on('pointerout',  () => this.aiBg.setAlpha(1));
+    const aiHit = this.add.rectangle(BTN_X, aiY, BTN_W, BTN_H, 0x000000, 0)
+      .setDepth(5).setInteractive({ useHandCursor: true });
+    aiHit.on('pointerdown', () => { GameSettings.enemyAI = !GameSettings.enemyAI; this.refresh(); });
+    aiHit.on('pointerover', () => this.aiBg.setAlpha(0.75));
+    aiHit.on('pointerout',  () => this.aiBg.setAlpha(1));
 
     this.refresh();
 
-    // ── Close button ─────────────────────────────────────────────────────────
-    const closeBg = this.add.rectangle(CX, CY + PH / 2 - 90, 197, 45, 0x333366)
-      .setOrigin(0.5).setDepth(2)
-      .setInteractive({ useHandCursor: true });
-    const closeTxt = this.add.text(CX, CY + PH / 2 - 90, 'CLOSE', {
-      fontFamily: '"Press Start 2P", monospace',
-      fontSize: '16px',
-      color: '#ffffff',
-    }).setOrigin(0.5).setDepth(3);
+    // ── Footer ────────────────────────────────────────────────────────────────
+    const ftrH = 52;
+    const ftrY = CY + PH / 2 - ftrH;
+    const ftrBg = this.add.graphics().setDepth(2);
+    ftrBg.fillGradientStyle(0x16091b, 0x16091b, 0x0c0610, 0x0c0610, 1);
+    ftrBg.fillRect(CX - PW / 2, ftrY, PW, ftrH);
+    ftrBg.lineStyle(1, 0x0a0a0f, 1);
+    ftrBg.lineBetween(CX - PW / 2, ftrY, CX + PW / 2, ftrY);
 
-    closeBg
-      .on('pointerdown', () => this.close())
-      .on('pointerover', () => { closeBg.setFillStyle(0x5555aa); closeTxt.setColor('#ffd23f'); })
-      .on('pointerout',  () => { closeBg.setFillStyle(0x333366); closeTxt.setColor('#ffffff'); });
+    const closeBtnX = this.fromFight ? CX + 88 : CX;
+    this.addFooterBtn(closeBtnX, ftrY + ftrH / 2, 148, 36, 'CLOSE', '#ffffff', 0x333366, 0x5555aa, () => this.close());
 
-    // ── Back to Character Select (only shown mid-fight) ───────────────────────
     if (this.fromFight) {
-      const backBg = this.add.rectangle(CX, CY + PH / 2 - 46, 293, 45, 0x442200)
-        .setOrigin(0.5).setDepth(2)
-        .setInteractive({ useHandCursor: true });
-      const backTxt = this.add.text(CX, CY + PH / 2 - 46, 'חזרה לבחירה', {
-        fontFamily: '"Secular One", "Heebo", sans-serif',
-        fontSize: '19px',
-        color: '#ffaa44',
-      }).setOrigin(0.5).setDepth(3);
-
-      backBg
-        .on('pointerdown', () => this.backToSelect())
-        .on('pointerover', () => { backBg.setFillStyle(0x885500); backTxt.setColor('#ffd23f'); })
-        .on('pointerout',  () => { backBg.setFillStyle(0x442200); backTxt.setColor('#ffaa44'); });
+      this.addFooterBtn(CX - 88, ftrY + ftrH / 2, 148, 36, 'חזרה לבחירה', '#ffaa44', 0x442200, 0x885500, () => this.backToSelect(), '#ffd23f');
     }
 
     this.input.keyboard?.addKey('ESC').on('down', () => this.close());
   }
 
-  private refresh(): void {
-    if (GameSettings.unlimitedTimer) {
-      this.timerBg.setFillStyle(0x003322);
-      this.timerTxt.setText('UNLIMITED').setColor('#00ff88');
-    } else {
-      this.timerBg.setFillStyle(0x332200);
-      this.timerTxt.setText('99 SEC').setColor('#ffaa00');
-    }
+  private addFooterBtn(
+    x: number, y: number, w: number, h: number,
+    label: string,
+    textColor: string,
+    fill: number, hoverFill: number,
+    action: () => void,
+    hoverTextColor = '#ffffff',
+  ): void {
+    const g = this.add.graphics().setDepth(3);
+    const isHebrew = /[֐-׿]/.test(label);
+    const txt = this.add.text(x, y, label, {
+      fontFamily: isHebrew ? '"Secular One", "Heebo", sans-serif' : '"Press Start 2P", monospace',
+      fontSize: isHebrew ? '14px' : '11px',
+      color: textColor,
+    }).setOrigin(0.5, 0.5).setDepth(4);
 
-    if (GameSettings.enemyAI) {
-      this.aiBg.setFillStyle(0x003322);
-      this.aiTxt.setText('ON').setColor('#00ff88');
-    } else {
-      this.aiBg.setFillStyle(0x220000);
-      this.aiTxt.setText('OFF').setColor('#ff4444');
-    }
+    const draw = (hover: boolean) => {
+      g.clear();
+      g.fillStyle(hover ? hoverFill : fill, 1);
+      g.fillRect(x - w / 2, y - h / 2, w, h);
+      g.lineStyle(2, 0x0a0a0f, 1);
+      g.strokeRect(x - w / 2, y - h / 2, w, h);
+    };
+    draw(false);
+
+    const hit = this.add.rectangle(x, y, w, h, 0x000000, 0).setDepth(5).setInteractive({ useHandCursor: true });
+    hit.on('pointerdown', () => action());
+    hit.on('pointerover', () => { draw(true);  txt.setColor(hoverTextColor); });
+    hit.on('pointerout',  () => { draw(false); txt.setColor(textColor); });
+  }
+
+  private refresh(): void {
+    const bodyTop = BODY_TOP(PH);
+    const timerY  = bodyTop + 52 * 0;
+    const aiY     = bodyTop + 52 * 1;
+
+    this.timerBg.clear();
+    this.timerBg.fillStyle(GameSettings.unlimitedTimer ? 0x003322 : 0x332200, 1);
+    this.timerBg.fillRect(BTN_X - BTN_W / 2, timerY - BTN_H / 2, BTN_W, BTN_H);
+    this.timerBg.lineStyle(2, 0x0a0a0f, 1);
+    this.timerBg.strokeRect(BTN_X - BTN_W / 2, timerY - BTN_H / 2, BTN_W, BTN_H);
+    this.timerTxt.setText(GameSettings.unlimitedTimer ? 'UNLIMITED' : '99 SEC')
+      .setColor(GameSettings.unlimitedTimer ? '#00ff88' : '#ffaa00');
+
+    this.aiBg.clear();
+    this.aiBg.fillStyle(GameSettings.enemyAI ? 0x003322 : 0x220000, 1);
+    this.aiBg.fillRect(BTN_X - BTN_W / 2, aiY - BTN_H / 2, BTN_W, BTN_H);
+    this.aiBg.lineStyle(2, 0x0a0a0f, 1);
+    this.aiBg.strokeRect(BTN_X - BTN_W / 2, aiY - BTN_H / 2, BTN_W, BTN_H);
+    this.aiTxt.setText(GameSettings.enemyAI ? 'ON' : 'OFF')
+      .setColor(GameSettings.enemyAI ? '#00ff88' : '#ff4444');
   }
 
   private close(): void {
@@ -150,9 +176,6 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private backToSelect(): void {
-    // Stop fight-related scenes explicitly, then start SELECT which also stops
-    // this (Settings) scene.  Avoid calling scene.stop() before scene.start()
-    // as that double-queues the stop and can confuse Phaser's scene manager.
     this.scene.stop(SCENES.UI);
     this.scene.stop(SCENES.FIGHT);
     this.scene.start(SCENES.SELECT);

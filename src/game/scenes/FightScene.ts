@@ -95,13 +95,15 @@ export class FightScene extends Phaser.Scene {
 
   private buildStage(): void {
     if (this.textures.exists('stage_bg')) {
-      this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'stage_bg')
-        .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
+      const img = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT, 'stage_bg')
+        .setOrigin(0.5, 1)
         .setDepth(0);
+      const scale = Math.max(GAME_WIDTH / img.width, GAME_HEIGHT / img.height);
+      img.setScale(scale);
     } else {
-      this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1a2e).setDepth(0);
+      this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x7ec8e8).setDepth(0);
       const groundH = GAME_HEIGHT - GROUND_Y;
-      this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + groundH / 2, STAGE_RIGHT - STAGE_LEFT, groundH, 0x3d2e1e).setDepth(1);
+      this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + groundH / 2, STAGE_RIGHT - STAGE_LEFT, groundH, 0xd4b896).setDepth(1);
       this.add.rectangle(GAME_WIDTH / 2, GROUND_Y, STAGE_RIGHT - STAGE_LEFT, 4, 0x8b6b4a).setDepth(2);
     }
   }

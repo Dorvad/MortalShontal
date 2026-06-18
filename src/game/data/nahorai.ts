@@ -19,6 +19,7 @@ import { FighterData } from '../fighters/FighterData';
 export const nahoraiData: FighterData = {
   id: 'nahorai',
   displayName: 'Nahorai',
+  subtitle: 'מלך השכונה',
   maxHealth: 100,
   walkSpeed: 260,
   jumpVelocity: -760,

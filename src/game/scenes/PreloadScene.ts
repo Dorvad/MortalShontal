@@ -11,13 +11,23 @@ export class PreloadScene extends Phaser.Scene {
       console.warn(`[PreloadScene] Could not load "${file.key}" — using placeholder.`);
     });
 
-    // ── Main menu assets ─────────────────────────────────────────────────────
+    // ── Main menu / UI assets ────────────────────────────────────────────────
     this.load.image('menu_logo',   'assets/ui/mainmenu/logo.png');
-    this.load.image('menu_blonde', 'assets/ui/mainmenu/blonde.png');
-    this.load.image('menu_goth',   'assets/ui/mainmenu/goth.png');
+    this.load.image('menu_night',  'assets/ui/mainmenu/night.png');
 
-    // ── Stage background ─────────────────────────────────────────────────────
-    this.load.image('stage_bg', 'assets/stage/bg.png');
+    // ── Character card illustrations (for select / menu) ─────────────────────
+    this.load.image('card_arava',   'assets/ui/characters/arava_card.png');
+    this.load.image('card_tomer',   'assets/ui/characters/tomer_card.png');
+    this.load.image('card_nahorai', 'assets/ui/characters/nahorai_card.png');
+
+    // ── Character splash art (full-body portraits for select screen) ──────────
+    this.load.image('splash_nahorai', 'assets/ui/characters/nahorai_splash.png');
+    this.load.image('splash_tomer',   'assets/ui/characters/tomer_splash.png');
+    this.load.image('splash_arava',   'assets/ui/characters/arava_splash.png');
+
+    // ── Stage backgrounds ────────────────────────────────────────────────────
+    this.load.image('stage_bg',       'assets/stage/bg_day.png');
+    this.load.image('stage_bg_night', 'assets/stage/bg_night.png');
 
     // ── Nahorai sprite sheets ────────────────────────────────────────────────
     // idle  — 2560×853,  6 frames × 1 row  (frameW = floor(2560/6) = 426)

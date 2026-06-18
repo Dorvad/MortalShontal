@@ -14,6 +14,7 @@ import { FighterData } from '../fighters/FighterData';
 export const tomerData: FighterData = {
   id: 'tomer',
   displayName: 'Tomer',
+  subtitle: 'חיית החדר כושר',
   maxHealth: 100,
   walkSpeed: 250,
   jumpVelocity: -750,
