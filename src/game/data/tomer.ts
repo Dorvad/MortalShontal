@@ -67,19 +67,25 @@ export const tomerData: FighterData = {
     'tomer_block':        186,  // 256px frame, content 241px → 241×(186/256)≈175px
     'tomer_light_attack': 203,  // 256px frame, content 221px → 221×(203/256)≈175px
     'tomer_hitstun':      202,  // 256px frame, content 222px → 222×(202/256)≈175px
+    'tomer_jump_rise':    232,  // 256px frame, content 193px → 193×(232/256)≈175px
+    'tomer_jump_fall':    227,  // 256px frame, content 197px → 197×(227/256)≈175px
   },
   spriteFilter: 'linear',
   animFrames: {
-    idle: { start: 0, end: 3, frameRate: 7,  repeat: -1 },
-    walk: { start: 0, end: 4, frameRate: 10, repeat: -1 },
+    idle:      { start: 0, end: 3, frameRate: 7,  repeat: -1 },
+    walk:      { start: 0, end: 4, frameRate: 10, repeat: -1 },
+    jump_rise: { start: 0, end: 1, frameRate: 10, repeat: 0  },  // frames 0-1: takeoff → airborne
+    jump_fall: { start: 2, end: 2, frameRate: 10, repeat: -1 },  // frame 2: fall/landing hold
   },
-  // Per-frame x-offset compensation (source pixels). Target centre = 192/2 = 96 px.
-  // Positive = shift right; negative = shift left.
+  // Per-frame x-offset compensation (source pixels). Target centre = 256/2 = 128 px for 256px frames.
+  // For 192px frames target centre = 96 px. Positive = shift right; negative = shift left.
   spriteFrameOffsets: {
     tomer_idle:         [ 5,  5,  1, -1],
     tomer_walk:         [ 7,  1, -8, -9,  2],
     tomer_heavy_attack: [-3, -5,  4,  6,  8],
     tomer_light_attack: [ 7,  3],
     tomer_hitstun:      [-5],
+    tomer_jump_rise:    [+1, +4],  // frame 0: offset +1, frame 1: offset +4
+    tomer_jump_fall:    [-5],       // frame 2: offset -5
   },
 };

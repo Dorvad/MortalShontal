@@ -86,6 +86,10 @@ export class PreloadScene extends Phaser.Scene {
     });
     // dumbbell projectile — 86×56
     this.load.image('tomer_dumbbell', 'assets/fighters/tomer/tomer_dumbbell.png');
+    // jump — 768×256, 3 frames × 256×256
+    this.load.spritesheet('tomer_jump', 'assets/fighters/tomer/tomer_jump.png', {
+      frameWidth: 256, frameHeight: 256,
+    });
     // block — 256×256, single image
     this.load.image('tomer_block',   'assets/fighters/tomer/tomer_block.png');
     // light attack frames — 256×256 each
