@@ -150,9 +150,11 @@ export class SettingsScene extends Phaser.Scene {
   }
 
   private backToSelect(): void {
+    // Stop fight-related scenes explicitly, then start SELECT which also stops
+    // this (Settings) scene.  Avoid calling scene.stop() before scene.start()
+    // as that double-queues the stop and can confuse Phaser's scene manager.
     this.scene.stop(SCENES.UI);
     this.scene.stop(SCENES.FIGHT);
-    this.scene.stop();
     this.scene.start(SCENES.SELECT);
   }
 }

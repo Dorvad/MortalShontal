@@ -42,6 +42,9 @@ export class FightScene extends Phaser.Scene {
   constructor() { super(SCENES.FIGHT); }
 
   create(): void {
+    // Fade in from black so the scene is always visible regardless of how we arrived here.
+    this.cameras.main.fadeIn(300, 0, 0, 0);
+
     this.buildStage();
 
     const roster: Record<string, import('../fighters/FighterData').FighterData> = {
@@ -57,7 +60,7 @@ export class FightScene extends Phaser.Scene {
     this.ai     = new AIInput();
     this.combat = new CombatResolver();
 
-    this.debugKey = this.input.keyboard!.addKey(DEBUG_KEY as unknown as number);
+    this.debugKey = this.input.keyboard?.addKey(DEBUG_KEY as unknown as number) as Phaser.Input.Keyboard.Key;
 
     this.debugPanel = this.add.text(10, 65, '', {
       fontSize: '13px',
@@ -83,7 +86,9 @@ export class FightScene extends Phaser.Scene {
       this.projectiles.push(new Projectile(this, data));
     });
 
-    this.events.emit('roundStart');
+    // Defer roundStart by one tick so UIScene (launched in the same scene-queue
+    // flush) has time to run create() and register its event listeners first.
+    this.time.delayedCall(0, () => this.events.emit('roundStart'));
 
     SoundManager.play(this, 'bgm_fight');
   }
@@ -340,6 +345,12 @@ export class FightScene extends Phaser.Scene {
         }
       }
     }
+  }
+
+  shutdown(): void {
+    // Clean up touch controls so their DOM listeners don't linger.
+    this.playerInput?.destroy();
+    for (const p of this.projectiles) p.deactivate();
   }
 
   restart(): void {
