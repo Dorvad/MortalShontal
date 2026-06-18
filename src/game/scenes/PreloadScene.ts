@@ -61,6 +61,10 @@ export class PreloadScene extends Phaser.Scene {
     this.load.spritesheet('arava_heavy', 'assets/fighters/arava/arava_heavy.png', {
       frameWidth: 1024, frameHeight: 1536,
     });
+    // jump — 576×192, 3 frames × 192×192 (high-res)
+    this.load.spritesheet('arava_jump', 'assets/fighters/arava/arava_jump.png', {
+      frameWidth: 192, frameHeight: 192,
+    });
     // light attack — 192×192 each (high-res)
     this.load.image('arava_light1', 'assets/fighters/arava/arava_light1.png');
     this.load.image('arava_light2', 'assets/fighters/arava/arava_light2.png');

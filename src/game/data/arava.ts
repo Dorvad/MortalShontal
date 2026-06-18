@@ -53,11 +53,10 @@ export const aravaData: FighterData = {
   spriteKey: 'arava',
   spriteDisplayHeight: 190,
   spriteFrameOffsets: {
-    // Idle — target centre = 192/2 = 96px; offsets = 96 - measured_content_cx
-    arava_idle: [-3, -8, -2, 0, 2, 6],
-    // Walk — measured content centres per frame
-    arava_walk: [4, -4, 2, 0, 1, -2],
-    // Light attack — windup leans left (+14), kick extends right (-5)
+    arava_idle:         [-3, -8, -2, 0, 2, 6],
+    arava_walk:         [4, -4, 2, 0, 1, -2],
+    arava_jump_rise:    [1, -6],
+    arava_jump_fall:    [7],
     arava_light_attack: [14, -5],
   },
   spriteDisplayHeightOverrides: {
@@ -67,8 +66,10 @@ export const aravaData: FighterData = {
   },
   spriteFilter: 'linear',
   animFrames: {
-    idle: { start: 0, end: 5, frameRate: 8,  repeat: -1 },  // 6 frames × 192×192
-    walk: { start: 0, end: 5, frameRate: 12, repeat: -1 },  // 6 frames × 192×192
+    idle:      { start: 0, end: 5, frameRate: 8,  repeat: -1 },  // 6 frames × 192×192
+    walk:      { start: 0, end: 5, frameRate: 12, repeat: -1 },  // 6 frames × 192×192
+    jump_rise: { start: 0, end: 1, frameRate: 10, repeat: 0  },  // frames 0-1: takeoff → airborne
+    jump_fall: { start: 2, end: 2, frameRate: 10, repeat: -1 },  // frame 2: fall/landing hold
     // block/hitstun handled via registerSingle (plain images)
   },
 };
