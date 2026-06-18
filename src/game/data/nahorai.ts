@@ -58,7 +58,20 @@ export const nahoraiData: FighterData = {
     },
   },
   spriteKey: 'nahorai',
-  spriteDisplayHeight: 170,
+  spriteDisplayHeight: 237,  // idle content ~629px in 853px frame → 629×(237/853)≈175px
+  spriteDisplayHeightOverrides: {
+    // walk frames: content ~655px in 852px → 655×(228/852)≈175px
+    'nahorai_walk':         228,
+    // jump frames vary (444-606px content); override tuned to rise/landing frames
+    'nahorai_jump_rise':    246,
+    'nahorai_jump_fall':    246,
+    // combat sprites are 1350px tall; scale each to show character at ~175px
+    'nahorai_block':        211,   // content 1120px
+    'nahorai_hitstun':      207,   // content 1139px
+    'nahorai_light_attack': 208,   // content ~1135px avg across light1/light2
+    // heavy sheet is 192px tall; avg content ~157px → 157×(214/192)≈175px
+    'nahorai_heavy_attack': 214,
+  },
   spriteFilter: 'linear',
   animFrames: {
     // Idle — use frames 0-3 only; frames 4-5 have severe drift / direction issues

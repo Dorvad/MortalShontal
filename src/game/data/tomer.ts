@@ -5,6 +5,10 @@ import { FighterData } from '../fighters/FighterData';
 //   tomer_walk.png     — 960×192,   5 frames × 192×192
 //   tomer_heavy.png    — 960×192,   5 frames × 192×192 (dumbbell throw)
 //   tomer_dumbbell.png — 86×56,     projectile sprite
+//   tomer_block.png    — 256×256,   single image; content 241px → override 186
+//   tomer_light1.png   — 256×256,   light attack frame 1; content 221px → override 203
+//   tomer_light2.png   — 256×256,   light attack frame 2; content 221px → override 203
+//   tomer_hitstun.png  — 256×256,   hitstun; content 222px → override 202
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const tomerData: FighterData = {
@@ -58,7 +62,12 @@ export const tomerData: FighterData = {
     },
   },
   spriteKey: 'tomer',
-  spriteDisplayHeight: 185,
+  spriteDisplayHeight: 192,  // idle content 175px in 192px frame → 175×(192/192)=175px
+  spriteDisplayHeightOverrides: {
+    'tomer_block':        186,  // 256px frame, content 241px → 241×(186/256)≈175px
+    'tomer_light_attack': 203,  // 256px frame, content 221px → 221×(203/256)≈175px
+    'tomer_hitstun':      202,  // 256px frame, content 222px → 222×(202/256)≈175px
+  },
   spriteFilter: 'linear',
   animFrames: {
     idle: { start: 0, end: 3, frameRate: 7,  repeat: -1 },
@@ -70,5 +79,7 @@ export const tomerData: FighterData = {
     tomer_idle:         [ 5,  5,  1, -1],
     tomer_walk:         [ 7,  1, -8, -9,  2],
     tomer_heavy_attack: [-3, -5,  4,  6,  8],
+    tomer_light_attack: [ 7,  3],
+    tomer_hitstun:      [-5],
   },
 };

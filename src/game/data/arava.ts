@@ -51,7 +51,7 @@ export const aravaData: FighterData = {
     },
   },
   spriteKey: 'arava',
-  spriteDisplayHeight: 190,
+  spriteDisplayHeight: 187,  // idle content ~180px in 192px frame → 180×(187/192)≈175px
   spriteFrameOffsets: {
     arava_idle:         [-3, -8, -2, 0, 2, 6],
     arava_walk:         [4, -4, 2, 0, 1, -2],
@@ -61,9 +61,10 @@ export const aravaData: FighterData = {
     arava_heavy_attack: [0, -2, -3, -4],
   },
   spriteDisplayHeightOverrides: {
-    // heavy frame is 1024×1536; character fills ~70% of height → 1536*0.70≈1075px real
-    // to render at ~170px game height: 170/0.70 ≈ 243
-    'arava_heavy_attack': 243,
+    // block: 192px frame, content 171px → 171×(197/192)≈175px
+    'arava_block':        197,
+    // heavy: 768px frame, content ~737px → intentionally oversized (energy aura effect)
+    'arava_heavy_attack': 183,
   },
   spriteFilter: 'linear',
   animFrames: {

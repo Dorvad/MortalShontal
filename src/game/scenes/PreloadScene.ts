@@ -87,7 +87,12 @@ export class PreloadScene extends Phaser.Scene {
     // dumbbell projectile — 86×56
     this.load.image('tomer_dumbbell', 'assets/fighters/tomer/tomer_dumbbell.png');
     // block — 256×256, single image
-    this.load.image('tomer_block', 'assets/fighters/tomer/tomer_block.png');
+    this.load.image('tomer_block',   'assets/fighters/tomer/tomer_block.png');
+    // light attack frames — 256×256 each
+    this.load.image('tomer_light1',  'assets/fighters/tomer/tomer_light1.png');
+    this.load.image('tomer_light2',  'assets/fighters/tomer/tomer_light2.png');
+    // hitstun — 256×256, single image
+    this.load.image('tomer_hitstun', 'assets/fighters/tomer/tomer_hitstun.png');
     const ctrlPath = 'assets/ui/controls/';
     this.load.image('ctrl_btn',           ctrlPath + 'button_circle.png');
     this.load.image('ctrl_btn_hl',        ctrlPath + 'button_circle_highlight.png');
