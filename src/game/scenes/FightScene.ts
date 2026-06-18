@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { Fighter } from '../fighters/Fighter';
 import { FighterInput } from '../fighters/FighterInput';
 import { CombatResolver, HitResult } from '../combat/CombatResolver';
+import { Projectile, ProjectileSpawnData } from '../combat/Projectile';
+import { rectsOverlap } from '../utils/rects';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
 import { tomerData }   from '../data/tomer';
@@ -35,6 +37,7 @@ export class FightScene extends Phaser.Scene {
   private comboTimer       = 0;   // ms, wall-clock countdown
   private timeScale        = 1.0;
   private activeDamageTexts: Phaser.GameObjects.Text[] = [];
+  private projectiles:       Projectile[] = [];
 
   constructor() { super(SCENES.FIGHT); }
 
@@ -74,6 +77,12 @@ export class FightScene extends Phaser.Scene {
     this.comboTimer        = 0;
     this.timeScale         = 1.0;
     this.activeDamageTexts = [];
+    this.projectiles       = [];
+
+    this.events.on('projectileSpawn', (data: ProjectileSpawnData) => {
+      this.projectiles.push(new Projectile(this, data));
+    });
+
     this.events.emit('roundStart');
 
     SoundManager.play(this, 'bgm_fight');
@@ -148,6 +157,9 @@ export class FightScene extends Phaser.Scene {
     // Face each other (only when not committed to an attack)
     this.faceOpponent(this.player, this.enemy);
     this.faceOpponent(this.enemy, this.player);
+
+    // Projectile updates (runs in fight + dying phases so in-flight dumbbells still move)
+    this.updateProjectiles(scaledDelta);
 
     // Combat resolution — only process hits during active fight
     if (this.roundPhase === 'fight') {
@@ -290,11 +302,53 @@ export class FightScene extends Phaser.Scene {
     this.debugPanel?.setText(lines.join('\n'));
   }
 
+  private updateProjectiles(delta: number): void {
+    this.projectiles = this.projectiles.filter(p => p.active);
+    for (const proj of this.projectiles) {
+      proj.update(delta);
+      if (!proj.active) continue;
+
+      const targets = proj.ownerId === this.player.id
+        ? [this.enemy]
+        : [this.player];
+
+      for (const target of targets) {
+        if (proj.hitTargets.has(target.id) || !target.hurtbox.active) continue;
+        if (!rectsOverlap(proj.hitRect, target.hurtbox.rect)) continue;
+
+        proj.hitTargets.add(target.id);
+        const facingSign = proj.vx > 0 ? 1 : -1;
+        const result = target.takeHit({
+          damage:     proj.damage,
+          knockbackX: proj.knockbackX * facingSign,
+          knockbackY: proj.knockbackY,
+          hitstun:    proj.hitstun,
+          blockstun:  proj.blockstun,
+        });
+        if (result !== 'immune') {
+          this.applyHitEffects(
+            { wasBlocked: result === 'blocked', attackId: 'heavy', damage: proj.damage },
+            target,
+          );
+          // Combo tracking: if the projectile owner is the player
+          if (proj.ownerId === this.player.id && result !== 'blocked') {
+            this.comboCount++;
+            this.comboTimer = 1200;
+            this.events.emit('comboUpdate', this.comboCount);
+          }
+          proj.deactivate();
+        }
+      }
+    }
+  }
+
   restart(): void {
+    for (const p of this.projectiles) p.deactivate();
     this.timeScale         = 1.0;
     this.comboCount        = 0;
     this.comboTimer        = 0;
     this.activeDamageTexts = [];
+    this.projectiles       = [];
     this.scene.restart();
   }
 }

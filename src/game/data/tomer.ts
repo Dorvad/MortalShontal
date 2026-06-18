@@ -1,8 +1,10 @@
 import { FighterData } from '../fighters/FighterData';
 
 // ── Tomer sprite sheets (public/assets/fighters/tomer/) ───────────────────────
-//   tomer_idle.png  — 768×192,   4 frames × 192×192
-//   tomer_walk.png  — 960×192,   5 frames × 192×192
+//   tomer_idle.png     — 768×192,   4 frames × 192×192
+//   tomer_walk.png     — 960×192,   5 frames × 192×192
+//   tomer_heavy.png    — 960×192,   5 frames × 192×192 (dumbbell throw)
+//   tomer_dumbbell.png — 86×56,     projectile sprite
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const tomerData: FighterData = {
@@ -37,26 +39,36 @@ export const tomerData: FighterData = {
       id: 'heavy',
       damage: 20,
       knockbackX: 400,
-      knockbackY: -150,
+      knockbackY: -120,
       hitstun: 26,
-      blockstun: 15,
-      startup: 12,
-      active: 6,
-      recovery: 22,
-      hitboxOffset: { x: 38, y: -64, w: 86, h: 54 },
+      blockstun: 14,
+      startup: 10,  // frames 0-1 of throw animation (windup + pullback)
+      active: 4,    // frame 2 (release) — projectile spawns here
+      recovery: 18, // frames 3-4 (follow-through + recovery)
+      hitboxOffset: { x: 0, y: 0, w: 0, h: 0 }, // no melee hitbox; projectile carries damage
+      projectile: {
+        speed: 620,
+        spriteKey: 'tomer_dumbbell',
+        displayScale: 1.0,
+        hitW: 54,
+        hitH: 36,
+        launchOffsetX: 52,  // ~arm-tip distance forward in game px
+        launchOffsetY: -95, // about mid-torso height
+      },
     },
   },
   spriteKey: 'tomer',
   spriteDisplayHeight: 185,
   spriteFilter: 'linear',
   animFrames: {
-    idle: { start: 0, end: 3, frameRate: 7, repeat: -1 },
+    idle: { start: 0, end: 3, frameRate: 7,  repeat: -1 },
     walk: { start: 0, end: 4, frameRate: 10, repeat: -1 },
   },
   // Per-frame x-offset compensation (source pixels). Target centre = 192/2 = 96 px.
   // Positive = shift right; negative = shift left.
   spriteFrameOffsets: {
-    tomer_idle: [ 5,  5,  1, -1],
-    tomer_walk: [ 7,  1, -8, -9,  2],
+    tomer_idle:         [ 5,  5,  1, -1],
+    tomer_walk:         [ 7,  1, -8, -9,  2],
+    tomer_heavy_attack: [-3, -5,  4,  6,  8],
   },
 };

@@ -80,6 +80,12 @@ export class PreloadScene extends Phaser.Scene {
     this.load.spritesheet('tomer_walk', 'assets/fighters/tomer/tomer_walk.png', {
       frameWidth: 192, frameHeight: 192,
     });
+    // heavy attack (dumbbell throw) — 960×192, 5 frames × 192×192
+    this.load.spritesheet('tomer_heavy', 'assets/fighters/tomer/tomer_heavy.png', {
+      frameWidth: 192, frameHeight: 192,
+    });
+    // dumbbell projectile — 86×56
+    this.load.image('tomer_dumbbell', 'assets/fighters/tomer/tomer_dumbbell.png');
     const ctrlPath = 'assets/ui/controls/';
     this.load.image('ctrl_btn',           ctrlPath + 'button_circle.png');
     this.load.image('ctrl_btn_hl',        ctrlPath + 'button_circle_highlight.png');

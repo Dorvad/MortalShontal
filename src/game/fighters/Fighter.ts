@@ -61,6 +61,7 @@ export class Fighter {
   private stateTimer = 0;
   private currentAttack: AttackData | null = null;
   private attackPhaseName: 'startup' | 'active' | 'recovery' | null = null;
+  private hasSpawnedProjectile = false;
 
   // Game-feel timers (in frames)
   private freezeFrames = 0;
@@ -348,7 +349,29 @@ export class Fighter {
       this.hitbox.active = false;
     } else if (elapsed < atk.startup + atk.active) {
       this.attackPhaseName = 'active';
-      this.hitbox.active = true;
+      if (atk.projectile) {
+        this.hitbox.active = false;
+        if (!this.hasSpawnedProjectile) {
+          this.hasSpawnedProjectile = true;
+          this.scene.events.emit('projectileSpawn', {
+            x:          this.x + atk.projectile.launchOffsetX * this.facing,
+            y:          this.y + atk.projectile.launchOffsetY,
+            vx:         atk.projectile.speed * this.facing,
+            damage:     atk.damage,
+            knockbackX: atk.knockbackX,
+            knockbackY: atk.knockbackY,
+            hitstun:    atk.hitstun,
+            blockstun:  atk.blockstun,
+            hitW:       atk.projectile.hitW,
+            hitH:       atk.projectile.hitH,
+            spriteKey:  atk.projectile.spriteKey,
+            displayScale: atk.projectile.displayScale,
+            ownerId:    this.id,
+          });
+        }
+      } else {
+        this.hitbox.active = true;
+      }
     } else {
       this.attackPhaseName = 'recovery';
       this.hitbox.active = false;
@@ -394,15 +417,16 @@ export class Fighter {
     const atk = this.data.attacks[id];
     if (!atk) return;
 
-    this.currentAttack = atk;
-    this.hitbox.attackId  = atk.id;
-    this.hitbox.damage     = atk.damage;
-    this.hitbox.knockbackX = atk.knockbackX;
-    this.hitbox.knockbackY = atk.knockbackY;
-    this.hitbox.hitstun    = atk.hitstun;
-    this.hitbox.blockstun  = atk.blockstun;
+    this.currentAttack         = atk;
+    this.hasSpawnedProjectile  = false;
+    this.hitbox.attackId       = atk.id;
+    this.hitbox.damage         = atk.damage;
+    this.hitbox.knockbackX     = atk.knockbackX;
+    this.hitbox.knockbackY     = atk.knockbackY;
+    this.hitbox.hitstun        = atk.hitstun;
+    this.hitbox.blockstun      = atk.blockstun;
     this.hitbox.hitTargets.clear();
-    this.hitbox.active = false;
+    this.hitbox.active         = false;
 
     this.stateTimer = atk.startup + atk.active + atk.recovery;
     this.state = 'attack';
