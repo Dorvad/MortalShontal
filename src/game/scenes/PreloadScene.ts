@@ -19,11 +19,13 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('card_arava',   'assets/ui/characters/arava_card.png');
     this.load.image('card_tomer',   'assets/ui/characters/tomer_card.png');
     this.load.image('card_nahorai', 'assets/ui/characters/nahorai_card.png');
+    this.load.image('card_shontal', 'assets/ui/characters/shontal_card.png');
 
     // ── Character splash art (full-body portraits for select screen) ──────────
     this.load.image('splash_nahorai', 'assets/ui/characters/nahorai_splash.png');
     this.load.image('splash_tomer',   'assets/ui/characters/tomer_splash.png');
     this.load.image('splash_arava',   'assets/ui/characters/arava_splash.png');
+    this.load.image('splash_shontal', 'assets/ui/characters/shontal_splash.png');
 
     // ── Stage backgrounds ────────────────────────────────────────────────────
     this.load.image('stage_bg',       'assets/stage/bg_day.png');
@@ -83,6 +85,24 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('arava_light2', 'assets/fighters/arava/arava_light2.png');
     // hitstun — 64×64, single image
     this.load.image('arava_hitstun', 'assets/fighters/arava/arava_hitstun.png');
+
+    // ── Shontal sprite sheets ────────────────────────────────────────────────
+    // idle  — 3072×512, 6 frames × 512×512
+    this.load.spritesheet('shontal_idle', 'assets/fighters/shontal/shontal_idle.png', {
+      frameWidth: 512, frameHeight: 512,
+    });
+    // walk  — 3072×512, 6 frames × 512×512
+    this.load.spritesheet('shontal_walk', 'assets/fighters/shontal/shontal_walk.png', {
+      frameWidth: 512, frameHeight: 512,
+    });
+    // jump  — 3072×512, 6 frames × 512×512 (frames 0-2 rise, 3-5 fall)
+    this.load.spritesheet('shontal_jump', 'assets/fighters/shontal/shontal_jump.png', {
+      frameWidth: 512, frameHeight: 512,
+    });
+    this.load.image('shontal_light1',  'assets/fighters/shontal/shontal_light1.png');
+    this.load.image('shontal_light2',  'assets/fighters/shontal/shontal_light2.png');
+    this.load.image('shontal_block',   'assets/fighters/shontal/shontal_block.png');
+    this.load.image('shontal_hitstun', 'assets/fighters/shontal/shontal_hitstun.png');
 
     // ── Tomer sprite sheets ──────────────────────────────────────────────────
     // idle  — 768×192, 4 frames × 192×192

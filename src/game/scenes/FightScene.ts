@@ -7,6 +7,7 @@ import { rectsOverlap } from '../utils/rects';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
 import { tomerData }   from '../data/tomer';
+import { shontalData } from '../data/shontal';
 import { AIInput }     from '../input/AIInput';
 import { emptyInput }  from '../input/InputState';
 import { GameSettings } from '../GameSettings';
@@ -48,7 +49,7 @@ export class FightScene extends Phaser.Scene {
     this.buildStage();
 
     const roster: Record<string, import('../fighters/FighterData').FighterData> = {
-      nahorai: nahoraiData, arava: aravaData, tomer: tomerData,
+      nahorai: nahoraiData, arava: aravaData, tomer: tomerData, shontal: shontalData,
     };
     const playerData = roster[GameSettings.playerCharId] ?? nahoraiData;
     const enemyData  = Object.values(roster).find(d => d.id !== playerData.id) ?? aravaData;

@@ -3,10 +3,11 @@ import { SCENES, GAME_WIDTH, GAME_HEIGHT } from '../utils/constants';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
 import { tomerData }   from '../data/tomer';
+import { shontalData } from '../data/shontal';
 import { FighterData } from '../fighters/FighterData';
 import { GameSettings } from '../GameSettings';
 
-const CHARS: FighterData[] = [nahoraiData, aravaData, tomerData];
+const CHARS: FighterData[] = [nahoraiData, aravaData, tomerData, shontalData];
 
 const STAGES = [
   { id: 'stage_telaviv',  name: 'הרחוב',   bgKey: 'stage_telaviv'  },
@@ -19,6 +20,7 @@ const SPLASH_KEYS: Record<string, string> = {
   nahorai: 'splash_nahorai',
   arava:   'splash_arava',
   tomer:   'splash_tomer',
+  shontal: 'splash_shontal',
 };
 
 // Splash art aspect ratio: 1086×1448 ≈ 0.75
@@ -29,12 +31,14 @@ const CARD_KEYS: Record<string, string> = {
   nahorai: 'card_nahorai',
   arava:   'card_arava',
   tomer:   'card_tomer',
+  shontal: 'card_shontal',
 };
 
 const CARD_RATIOS: Record<string, number> = {
   nahorai: 308 / 626,
   arava:    89 / 179,
   tomer:    67 / 176,
+  shontal:  384 / 512,
 };
 
 const PANEL_W  = 220;
@@ -208,7 +212,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     const gridY = 60;
     const gridW = GAME_WIDTH - gridX - 18;
     const gridH = GRID_H;
-    const cols  = 3;
+    const cols  = 4;
     const gap   = 10;
     const cardW = (gridW - gap * (cols - 1)) / cols;
     const cardH = gridH;
@@ -533,7 +537,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     this.refreshPreview();
 
     // Redraw all card highlight borders
-    const cols  = 3;
+    const cols  = 4;
     const gap   = 10;
     const gridX = GRID_X;
     const gridY = 60;

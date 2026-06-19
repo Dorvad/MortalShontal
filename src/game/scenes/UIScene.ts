@@ -4,6 +4,7 @@ import { SCENES, GAME_WIDTH } from '../utils/constants';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
 import { tomerData }   from '../data/tomer';
+import { shontalData } from '../data/shontal';
 import { GameSettings } from '../GameSettings';
 import { FighterData }  from '../fighters/FighterData';
 
@@ -35,7 +36,7 @@ export class UIScene extends Phaser.Scene {
 
   create(): void {
     const roster: Record<string, FighterData> = {
-      nahorai: nahoraiData, arava: aravaData, tomer: tomerData,
+      nahorai: nahoraiData, arava: aravaData, tomer: tomerData, shontal: shontalData,
     };
     this.playerData = roster[GameSettings.playerCharId] ?? nahoraiData;
     this.enemyData  = Object.values(roster).find(d => d.id !== this.playerData.id) ?? aravaData;
