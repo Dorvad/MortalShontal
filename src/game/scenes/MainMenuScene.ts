@@ -52,7 +52,7 @@ export class MainMenuScene extends Phaser.Scene {
       .setOrigin(0.5, 1)
       .setDisplaySize(aravaH * SPLASH_RATIO, aravaH)
       .setTint(0x050308)
-      .setAlpha(0.72)
+      .setAlpha(0.65)
       .setDepth(3);
 
     const tomerH = GAME_HEIGHT * 0.64;
@@ -61,7 +61,7 @@ export class MainMenuScene extends Phaser.Scene {
       .setDisplaySize(tomerH * SPLASH_RATIO, tomerH)
       .setFlipX(true)
       .setTint(0x050308)
-      .setAlpha(0.72)
+      .setAlpha(0.65)
       .setDepth(3);
   }
 
@@ -75,25 +75,24 @@ export class MainMenuScene extends Phaser.Scene {
     const boltR = this.add.graphics().setDepth(4);
     boltR.fillStyle(0xffd23f, 0.9);
     const rx = GAME_WIDTH * 0.76, ry = GAME_HEIGHT * 0.06;
-    boltR.fillTriangle(rx - 8, ry, rx + 10, ry + 40, rx - 12, ry + 40);
-    boltR.fillTriangle(rx - 12, ry + 40, rx + 6, ry + 80, rx - 24, ry + 80);
+    boltR.fillTriangle(rx - 10, ry, rx + 8, ry + 44, rx - 14, ry + 44);
+    boltR.fillTriangle(rx - 14, ry + 44, rx + 6, ry + 88, rx - 26, ry + 88);
 
     this.tweens.add({ targets: boltL, alpha: { from: 0, to: 0.9 }, duration: 80, delay: 400, yoyo: true, hold: 2600, repeat: -1 });
     this.tweens.add({ targets: boltR, alpha: { from: 0, to: 0.9 }, duration: 80, delay: 2200, yoyo: true, hold: 1800, repeat: -1 });
   }
 
   private buildLogo(): void {
-    const logoW = GAME_WIDTH * 0.50;
-    const logoH = logoW * (941 / 1672);
-    const logoY = GAME_HEIGHT * 0.28;
+    const targetW = GAME_WIDTH * 0.50;
+    const logoY   = GAME_HEIGHT * 0.26;
 
     const logo = this.add.image(GAME_WIDTH / 2, logoY, 'menu_logo')
       .setOrigin(0.5, 0.5)
       .setDepth(5);
 
-    // Capture native dimensions before overriding scale so tween lands at correct size
-    const sx = logoW / logo.width;
-    const sy = logoH / logo.height;
+    // Uniform scale from native width — preserves aspect ratio of any logo asset
+    const sx = targetW / logo.width;
+    const sy = sx;
     logo.setScale(0);
 
     this.tweens.add({
@@ -117,7 +116,7 @@ export class MainMenuScene extends Phaser.Scene {
 
   private buildMenu(): void {
     const CX = GAME_WIDTH / 2;
-    const btnW = 300, btnH = 50;
+    const btnW = 360, btnH = 50;
     const startY = GAME_HEIGHT * 0.618;
     const spacing = 62;
 
@@ -126,6 +125,10 @@ export class MainMenuScene extends Phaser.Scene {
       { label: 'הגדרות',               style: 'secondary', action: () => this.openSettings() },
       { label: 'רב-משתתפים (בקרוב)', style: 'disabled',  action: () => {} },
     ];
+
+    const ruleG = this.add.graphics().setDepth(6);
+    ruleG.lineStyle(1, 0xffd23f, 0.28);
+    ruleG.lineBetween(GAME_WIDTH * 0.20, startY - 32, GAME_WIDTH * 0.80, startY - 32);
 
     items.forEach(({ label, style, action }, i) => {
       const y = startY + i * spacing;
@@ -197,19 +200,19 @@ export class MainMenuScene extends Phaser.Scene {
     this.add.text(16, 10, 'v2.0', {
       fontFamily: '"Press Start 2P", monospace',
       fontSize: '9px',
-      color: '#5a4a6a',
+      color: '#7a6a8a',
     }).setDepth(7);
     this.add.text(GAME_WIDTH - 16, 10, 'CR 02', {
       fontFamily: '"Press Start 2P", monospace',
       fontSize: '9px',
-      color: '#5a4a6a',
+      color: '#7a6a8a',
     }).setOrigin(1, 0).setDepth(7);
   }
 
   private buildScanlines(): void {
     const rt = this.add.renderTexture(0, 0, GAME_WIDTH, GAME_HEIGHT).setDepth(10);
     const g  = this.make.graphics({ x: 0, y: 0 });
-    g.fillStyle(0x000000, 0.22);
+    g.fillStyle(0x000000, 0.20);
     for (let y = 0; y < GAME_HEIGHT; y += 3) g.fillRect(0, y, GAME_WIDTH, 1);
     rt.draw(g);
     g.destroy();

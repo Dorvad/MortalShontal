@@ -36,7 +36,7 @@ export class SettingsScene extends Phaser.Scene {
     panelBg.fillRect(CX - PW / 2, CY - PH / 2, PW, PH);
     panelBg.lineStyle(3, 0x0a0a0f, 1);
     panelBg.strokeRect(CX - PW / 2, CY - PH / 2, PW, PH);
-    panelBg.lineStyle(1, 0x4455cc, 0.6);
+    panelBg.lineStyle(1, 0xffd23f, 0.25);
     panelBg.strokeRect(CX - PW / 2 + 3, CY - PH / 2 + 3, PW - 6, PH - 6);
 
     // Header strip
@@ -108,7 +108,7 @@ export class SettingsScene extends Phaser.Scene {
     ftrBg.lineBetween(CX - PW / 2, ftrY, CX + PW / 2, ftrY);
 
     const closeBtnX = this.fromFight ? CX + 88 : CX;
-    this.addFooterBtn(closeBtnX, ftrY + ftrH / 2, 148, 36, 'CLOSE', '#ffffff', 0x333366, 0x5555aa, () => this.close());
+    this.addFooterBtn(closeBtnX, ftrY + ftrH / 2, 148, 36, 'CLOSE', '#ffffff', 0x660000, 0xaa0000, () => this.close());
 
     if (this.fromFight) {
       this.addFooterBtn(CX - 88, ftrY + ftrH / 2, 148, 36, 'חזרה לבחירה', '#ffaa44', 0x442200, 0x885500, () => this.backToSelect(), '#ffd23f');
@@ -156,7 +156,7 @@ export class SettingsScene extends Phaser.Scene {
     this.timerBg.clear();
     this.timerBg.fillStyle(GameSettings.unlimitedTimer ? 0x003322 : 0x332200, 1);
     this.timerBg.fillRect(BTN_X - BTN_W / 2, timerY - BTN_H / 2, BTN_W, BTN_H);
-    this.timerBg.lineStyle(2, 0x0a0a0f, 1);
+    this.timerBg.lineStyle(2, GameSettings.unlimitedTimer ? 0xffd23f : 0xe8332e, 1);
     this.timerBg.strokeRect(BTN_X - BTN_W / 2, timerY - BTN_H / 2, BTN_W, BTN_H);
     this.timerTxt.setText(GameSettings.unlimitedTimer ? 'UNLIMITED' : '99 SEC')
       .setColor(GameSettings.unlimitedTimer ? '#00ff88' : '#ffaa00');
@@ -164,7 +164,7 @@ export class SettingsScene extends Phaser.Scene {
     this.aiBg.clear();
     this.aiBg.fillStyle(GameSettings.enemyAI ? 0x003322 : 0x220000, 1);
     this.aiBg.fillRect(BTN_X - BTN_W / 2, aiY - BTN_H / 2, BTN_W, BTN_H);
-    this.aiBg.lineStyle(2, 0x0a0a0f, 1);
+    this.aiBg.lineStyle(2, GameSettings.enemyAI ? 0xffd23f : 0xe8332e, 1);
     this.aiBg.strokeRect(BTN_X - BTN_W / 2, aiY - BTN_H / 2, BTN_W, BTN_H);
     this.aiTxt.setText(GameSettings.enemyAI ? 'ON' : 'OFF')
       .setColor(GameSettings.enemyAI ? '#00ff88' : '#ff4444');

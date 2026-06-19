@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 
-const DRAIN_SPEED = 180; // HP per second
+const DRAIN_SPEED  = 180; // HP per second
+const N_SEGMENTS   = 20;
+const SEG_GAP      = 2;
 
 export class HealthBar {
   private g:            Phaser.GameObjects.Graphics;
@@ -9,6 +11,7 @@ export class HealthBar {
   private w:            number;
   private h:            number;
   private maxHealth:    number;
+  private activeColor:  number;
   private flipX:        boolean;
   private targetValue:  number;
   private displayValue: number;
@@ -20,7 +23,7 @@ export class HealthBar {
     width: number,
     height: number,
     maxHealth: number,
-    _color: number,
+    color: number,
     flipX = false,
   ) {
     this.x            = x;
@@ -28,6 +31,7 @@ export class HealthBar {
     this.w            = width;
     this.h            = height;
     this.maxHealth    = maxHealth;
+    this.activeColor  = color;
     this.flipX        = flipX;
     this.targetValue  = maxHealth;
     this.displayValue = maxHealth;
@@ -58,49 +62,35 @@ export class HealthBar {
     const g = this.g;
     g.clear();
 
-    const ratio    = Phaser.Math.Clamp(this.displayValue / this.maxHealth, 0, 1);
-    const tgtRatio = Phaser.Math.Clamp(this.targetValue  / this.maxHealth, 0, 1);
-    const fillW    = Math.round(this.w * ratio);
-    const tgtW     = Math.round(this.w * tgtRatio);
-    const originX  = this.flipX ? this.x - this.w : this.x;
+    const segW        = (this.w - (N_SEGMENTS - 1) * SEG_GAP) / N_SEGMENTS;
+    const displaySegs = Math.ceil(Phaser.Math.Clamp(this.displayValue / this.maxHealth, 0, 1) * N_SEGMENTS);
+    const targetSegs  = Math.ceil(Phaser.Math.Clamp(this.targetValue  / this.maxHealth, 0, 1) * N_SEGMENTS);
+    const isCritical  = targetSegs <= 5;
 
-    // Dark background track
-    g.fillStyle(0x1a0a10, 1);
-    g.fillRect(originX, this.y, this.w, this.h);
+    for (let i = 0; i < N_SEGMENTS; i++) {
+      const segX = this.flipX
+        ? this.x - (i + 1) * segW - i * SEG_GAP
+        : this.x + i * (segW + SEG_GAP);
 
-    // Ghost buffer (damage about to drain)
-    if (fillW > tgtW) {
-      const ghostX = this.flipX ? originX + this.w - fillW : originX + tgtW;
-      const ghostW = fillW - tgtW;
-      g.fillStyle(0xff8a1e, 0.35);
-      g.fillRect(ghostX, this.y, ghostW, this.h);
-    }
-
-    // Active fill — gradient: red → orange → yellow
-    if (fillW > 0) {
-      const barX = this.flipX ? originX + this.w - fillW : originX;
-      const seg  = Math.ceil(fillW / 3);
-      const rW = Math.min(seg, fillW);
-      const oW = Math.min(seg, Math.max(0, fillW - seg));
-      const yW = Math.max(0, fillW - seg * 2);
-
-      if (this.flipX) {
-        if (yW > 0) { g.fillStyle(0xffe24a, 1); g.fillRect(barX, this.y, yW, this.h); }
-        if (oW > 0) { g.fillStyle(0xff8a1e, 1); g.fillRect(barX + yW, this.y, oW, this.h); }
-        if (rW > 0) { g.fillStyle(0xe8332e, 1); g.fillRect(barX + yW + oW, this.y, rW, this.h); }
+      if (i < targetSegs) {
+        const fill = isCritical ? 0xff3b30 : this.activeColor;
+        g.fillStyle(fill, 1);
+        g.fillRect(segX, this.y, segW, this.h);
+        g.fillStyle(0xffffff, 0.22);
+        g.fillRect(segX, this.y, segW, 3);
+      } else if (i < displaySegs) {
+        g.fillStyle(this.activeColor, 0.30);
+        g.fillRect(segX, this.y, segW, this.h);
       } else {
-        if (rW > 0) { g.fillStyle(0xe8332e, 1); g.fillRect(barX, this.y, rW, this.h); }
-        if (oW > 0) { g.fillStyle(0xff8a1e, 1); g.fillRect(barX + rW, this.y, oW, this.h); }
-        if (yW > 0) { g.fillStyle(0xffe24a, 1); g.fillRect(barX + rW + oW, this.y, yW, this.h); }
+        g.fillStyle(0x0e0e1a, 1);
+        g.fillRect(segX, this.y, segW, this.h);
+        g.lineStyle(1, 0x2a2a44, 1);
+        g.strokeRect(segX, this.y, segW, this.h);
       }
-
-      // Top highlight strip
-      g.fillStyle(0xffffff, 0.28);
-      g.fillRect(barX, this.y, fillW, 3);
     }
 
-    // Border + drop shadow
-    g.lineStyle(3, 0x0a0a0f, 1);
+    const originX = this.flipX ? this.x - this.w : this.x;
+    g.lineStyle(2, 0x0a0a0f, 1);
     g.strokeRect(originX, this.y, this.w, this.h);
     g.fillStyle(0x000000, 1);
     g.fillRect(originX, this.y + this.h, this.w, 3);

@@ -94,8 +94,12 @@ export class FightScene extends Phaser.Scene {
   }
 
   private buildStage(): void {
-    if (this.textures.exists('stage_bg')) {
-      const img = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT, 'stage_bg')
+    const bgKey = this.textures.exists(GameSettings.stageId)
+      ? GameSettings.stageId
+      : this.textures.exists('stage_bg') ? 'stage_bg' : null;
+
+    if (bgKey) {
+      const img = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT, bgKey)
         .setOrigin(0.5, 1)
         .setDepth(0);
       const scale = Math.max(GAME_WIDTH / img.width, GAME_HEIGHT / img.height);

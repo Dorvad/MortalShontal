@@ -7,11 +7,11 @@ import { tomerData }   from '../data/tomer';
 import { GameSettings } from '../GameSettings';
 import { FighterData }  from '../fighters/FighterData';
 
-const BAR_W  = 320;
-const BAR_H  = 22;
-const BAR_Y  = 10;
-const MARGIN = 12;
-const AVATAR = 40;
+const BAR_W  = 420;
+const BAR_H  = 26;
+const BAR_Y  = 14;
+const MARGIN = 20;
+const AVATAR = 44;
 
 export class UIScene extends Phaser.Scene {
   private playerBar!: HealthBar;
@@ -45,51 +45,51 @@ export class UIScene extends Phaser.Scene {
     this.buildAvatar(MARGIN, BAR_Y, AVATAR, this.playerData, false);
     this.add.text(playerBarX, BAR_Y - 1, this.playerData.displayName, {
       fontFamily: '"Secular One", "Heebo", sans-serif',
-      fontSize: '14px', color: '#cfe6ff',
+      fontSize: '16px', color: '#cfe6ff',
       shadow: { color: '#000000', blur: 4, fill: true },
     }).setScrollFactor(0).setDepth(32);
-    this.playerBar = new HealthBar(this, playerBarX, BAR_Y + 16, BAR_W, BAR_H, this.playerData.maxHealth, 0xe8332e, false);
+    this.playerBar = new HealthBar(this, playerBarX, BAR_Y + 18, BAR_W, BAR_H, this.playerData.maxHealth, this.playerData.color, false);
 
     // ── Enemy HUD (right side) ────────────────────────────────────────────────
     const enemyBarX = GAME_WIDTH - MARGIN - AVATAR - 6;
     this.buildAvatar(GAME_WIDTH - MARGIN - AVATAR, BAR_Y, AVATAR, this.enemyData, true);
     this.add.text(enemyBarX, BAR_Y - 1, this.enemyData.displayName, {
       fontFamily: '"Secular One", "Heebo", sans-serif',
-      fontSize: '14px', color: '#ffcece',
+      fontSize: '16px', color: '#ffcece',
       shadow: { color: '#000000', blur: 4, fill: true },
     }).setScrollFactor(0).setDepth(32).setOrigin(1, 0);
-    this.enemyBar = new HealthBar(this, enemyBarX, BAR_Y + 16, BAR_W, BAR_H, this.enemyData.maxHealth, 0xe8332e, true);
+    this.enemyBar = new HealthBar(this, enemyBarX, BAR_Y + 18, BAR_W, BAR_H, this.enemyData.maxHealth, this.enemyData.color, true);
 
     // ── Centre timer ──────────────────────────────────────────────────────────
     this.roundText = this.add.text(GAME_WIDTH / 2, BAR_Y + BAR_H / 2 + 6, '', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '28px', color: '#ffffff',
+      fontSize: '32px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 4,
       shadow: { color: 'rgba(255,210,63,.7)', blur: 10, fill: true },
     }).setOrigin(0.5).setScrollFactor(0).setDepth(35).setVisible(false);
 
     // ── KO / FIGHT banner ─────────────────────────────────────────────────────
-    this.koText = this.add.text(GAME_WIDTH / 2, 200, '', {
+    this.koText = this.add.text(GAME_WIDTH / 2, 290, '', {
       fontFamily: '"Secular One", "Heebo", sans-serif',
       fontSize: '88px', color: '#ffd23f',
       stroke: '#0a0a0f', strokeThickness: 6,
       shadow: { color: '#e8332e', blur: 0, fill: false, offsetX: 5, offsetY: 5 },
     }).setOrigin(0.5).setScrollFactor(0).setDepth(36).setVisible(false);
 
-    this.restartText = this.add.text(GAME_WIDTH / 2, 300, 'לחצו להמשך', {
+    this.restartText = this.add.text(GAME_WIDTH / 2, 400, 'לחצו להמשך', {
       fontFamily: '"Secular One", "Heebo", sans-serif',
-      fontSize: '22px', color: '#ffffff',
+      fontSize: '26px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(36).setVisible(false);
 
     // ── Combo counter (rotated, arcade-style) ─────────────────────────────────
-    this.comboCount = this.add.text(MARGIN + AVATAR + 6, BAR_Y + BAR_H + 30, '', {
+    this.comboCount = this.add.text(MARGIN + AVATAR + 6, BAR_Y + 18 + BAR_H + 38, '', {
       fontFamily: '"Press Start 2P", monospace',
       fontSize: '30px', color: '#ffffff',
       stroke: '#e8332e', strokeThickness: 3,
     }).setScrollFactor(0).setDepth(35).setVisible(false).setAngle(-4);
 
-    this.comboText = this.add.text(MARGIN + AVATAR + 6, BAR_Y + BAR_H + 66, '', {
+    this.comboText = this.add.text(MARGIN + AVATAR + 6, BAR_Y + 18 + BAR_H + 74, '', {
       fontFamily: '"Secular One", "Heebo", sans-serif',
       fontSize: '18px', color: '#ffd23f',
       stroke: '#000000', strokeThickness: 3,

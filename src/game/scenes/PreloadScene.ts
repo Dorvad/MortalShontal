@@ -28,6 +28,9 @@ export class PreloadScene extends Phaser.Scene {
     // ── Stage backgrounds ────────────────────────────────────────────────────
     this.load.image('stage_bg',       'assets/stage/bg_day.png');
     this.load.image('stage_bg_night', 'assets/stage/bg_night.png');
+    this.load.image('stage_telaviv',  'assets/stage/stage_telaviv.png');
+    this.load.image('stage_campus',   'assets/stage/stage_campus.png');
+    this.load.image('stage_festival', 'assets/stage/stage_festival.png');
 
     // ── Nahorai sprite sheets ────────────────────────────────────────────────
     // idle  — 2560×853,  6 frames × 1 row  (frameW = floor(2560/6) = 426)
