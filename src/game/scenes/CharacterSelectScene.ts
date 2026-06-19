@@ -160,9 +160,9 @@ export class CharacterSelectScene extends Phaser.Scene {
     const cardKey   = CARD_KEYS[char.id];
 
     if (splashKey && this.textures.exists(splashKey)) {
-      // Use full splash art, sized to fill the panel height
-      const panelH   = GAME_HEIGHT - 112 - 90 - 28; // available img area
-      const h        = Math.min(panelH + 20, 200);
+      const panelW   = 170;
+      const imgAreaH = GAME_HEIGHT - 112 - 90 - 28; // header(28) + stats(90) + panel margins
+      const h        = Math.min(imgAreaH - 10, panelW / SPLASH_RATIO);
       const img = this.add.image(0, 0, splashKey)
         .setDisplaySize(h * SPLASH_RATIO, h)
         .setOrigin(0.5, 0.5);
@@ -219,7 +219,8 @@ export class CharacterSelectScene extends Phaser.Scene {
       let spriteObj: Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle;
 
       if (splashKey && this.textures.exists(splashKey)) {
-        const imgH = cardH * 0.88;
+        // Clamp height so width never exceeds card bounds (SPLASH_RATIO = w/h = 0.75)
+        const imgH = Math.min(cardH * 0.88, (cardW - 8) / SPLASH_RATIO);
         spriteObj = this.add.image(cx, y + cardH - 28, splashKey)
           .setDisplaySize(imgH * SPLASH_RATIO, imgH)
           .setOrigin(0.5, 1)
@@ -263,8 +264,8 @@ export class CharacterSelectScene extends Phaser.Scene {
 
       // Character name at bottom
       this.add.text(cx, y + cardH - 10, char.displayName, {
-        fontFamily: '"Press Start 2P", monospace',
-        fontSize: '8px',
+        fontFamily: '"Secular One", "Heebo", sans-serif',
+        fontSize: '14px',
         color: '#ffffff',
         shadow: { color: '#000000', blur: 4, fill: true },
       }).setOrigin(0.5, 1).setDepth(7);
@@ -320,9 +321,9 @@ export class CharacterSelectScene extends Phaser.Scene {
     ftr.lineStyle(3, 0x0a0a0f, 1);
     ftr.lineBetween(0, ftrY, GAME_WIDTH, ftrY);
 
-    this.add.text(18, ftrY + ftrH / 2, '◀ ESC — חזרה', {
-      fontFamily: '"Press Start 2P", monospace',
-      fontSize: '9px',
+    this.add.text(18, ftrY + ftrH / 2, '◀  ESC — חזרה', {
+      fontFamily: '"Secular One", "Heebo", sans-serif',
+      fontSize: '14px',
       color: '#7a6f8a',
     }).setOrigin(0, 0.5).setDepth(4);
 

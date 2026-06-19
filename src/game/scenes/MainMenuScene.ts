@@ -83,27 +83,29 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private buildLogo(): void {
-    const logoW = GAME_WIDTH * 0.66;
+    const logoW = GAME_WIDTH * 0.50;
     const logoH = logoW * (941 / 1672);
+    const logoY = GAME_HEIGHT * 0.28;
 
-    const logo = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT * 0.31, 'menu_logo')
+    const logo = this.add.image(GAME_WIDTH / 2, logoY, 'menu_logo')
       .setOrigin(0.5, 0.5)
-      .setDisplaySize(logoW, logoH)
-      .setDepth(5)
-      .setScale(0);
+      .setDepth(5);
 
-    // Slam-in animation
+    // Capture native dimensions before overriding scale so tween lands at correct size
+    const sx = logoW / logo.width;
+    const sy = logoH / logo.height;
+    logo.setScale(0);
+
     this.tweens.add({
       targets: logo,
-      scaleX: 1,
-      scaleY: 1,
-      alpha: 1,
+      scaleX: sx,
+      scaleY: sy,
       duration: 650,
       ease: 'Back.easeOut',
       onComplete: () => {
         this.tweens.add({
           targets: logo,
-          y: GAME_HEIGHT * 0.31 - 7,
+          y: logoY - 7,
           duration: 4200,
           ease: 'Sine.easeInOut',
           yoyo: true,
@@ -174,10 +176,10 @@ export class MainMenuScene extends Phaser.Scene {
 
   private buildInsertCoin(): void {
     const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.962, '★  הכנס מטבע  ★', {
-      fontFamily: '"Press Start 2P", monospace',
-      fontSize: '12px',
+      fontFamily: '"Secular One", "Heebo", sans-serif',
+      fontSize: '16px',
       color: '#36e0ff',
-      shadow: { color: '#36e0ff', blur: 8, fill: true },
+      shadow: { color: '#36e0ff', blur: 10, fill: true },
     }).setOrigin(0.5, 1).setDepth(7);
 
     this.tweens.add({
