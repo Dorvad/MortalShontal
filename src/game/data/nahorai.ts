@@ -94,18 +94,7 @@ export const nahoraiData: FighterData = {
   // Positive = shift right; negative = shift left.
   // Tune these in-game (they scale with spriteDisplayHeight automatically).
   spriteFrameOffsets: {
-    nahorai_idle: [
-      // frame 0: content centre ≈ 85 + 306/2 = 238  → offset = 213 - 238 = -25
-      // frame 1: content centre ≈ 69 + 316/2 = 227  → offset = 213 - 227 = -14
-      // frame 2: content centre ≈ 46 + 317/2 = 205  → offset = 213 - 205 =  +8
-      // frame 3: content centre ≈ 31 + 329/2 = 196  → offset = 213 - 196 = +17
-      -25, -14, 8, 17,
-    ],
-    nahorai_walk: [
-      // frame 0: content centre ≈ 34 + 367/2 = 218  → offset = 213 - 218 = -5
-      // frame 1: content centre ≈ 16 + 411/2 = 222  → offset = 213 - 222 = -9
-      // frame 2: content centre ≈  0 + 377/2 = 189  → offset = 213 - 189 = +24
-      -5, -9, 24,
-    ],
+    nahorai_idle: [-12, 6, 28, 42],
+    nahorai_walk: [7, -7, 24],
   },
 };

@@ -58,6 +58,14 @@ export const shontalData: FighterData = {
     idle:      { start: 0, end: 5, frameRate: 7,  repeat: -1 },
     walk:      { start: 0, end: 5, frameRate: 11, repeat: -1 },
     jump_rise: { start: 0, end: 2, frameRate: 10, repeat: 0  },
-    jump_fall: { start: 3, end: 5, frameRate: 10, repeat: -1 },
+    jump_fall: { start: 3, end: 4, frameRate: 10, repeat: -1 },
+    jump_land: { start: 5, end: 5, frameRate: 8,  repeat: 0  },
+  },
+  spriteFrameOffsets: {
+    shontal_idle:      [-16, -10, -30, -35, -14, -2],
+    shontal_walk:      [-18,  -2, -20, -10,  -8,  4],
+    shontal_jump_rise: [-10,  10,  30],
+    shontal_jump_fall: [  0,   0,   0,  -8,  31],
+    shontal_jump_land: [  0,   0,   0,   0,   0, 24],
   },
 };

@@ -54,8 +54,8 @@ export const aravaData: FighterData = {
   spriteKey: 'arava',
   spriteDisplayHeight: 187,  // idle content ~180px in 192px frame → 180×(187/192)≈175px
   spriteFrameOffsets: {
-    arava_idle:         [-3, -8, -2, 0, 2, 6],
-    arava_walk:         [4, -4, 2, 0, 1, -2],
+    arava_idle:         [-6, -9, -4, -2, 2, 6],
+    arava_walk:         [2, -4, 2, 0, 1, -4],
     arava_jump_rise:    [1, -6],
     arava_jump_fall:    [7],
     arava_light_attack: [14, -5],

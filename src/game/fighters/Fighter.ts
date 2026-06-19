@@ -127,6 +127,7 @@ export class Fighter {
     register(`${k}_walk`, `${k}_walk`, 'walk');
     register(`${k}_jump`, `${k}_jump_rise`, 'jump_rise');
     register(`${k}_jump`, `${k}_jump_fall`, 'jump_fall');
+    register(`${k}_jump`, `${k}_jump_land`, 'jump_land');
 
     // Single-frame combat sprites (block, hitstun — each loaded as a plain image)
     const registerSingle = (texKey: string, animKey: string, repeat: number): void => {
@@ -225,7 +226,9 @@ export class Fighter {
     const k = this.data.spriteKey;
     if (!k) return null;
     switch (this.state) {
-      case 'idle':   return this.spriteAnims.has(`${k}_idle`) ? `${k}_idle` : null;
+      case 'idle':
+        if (this.landingSquash > 0 && this.spriteAnims.has(`${k}_jump_land`)) return `${k}_jump_land`;
+        return this.spriteAnims.has(`${k}_idle`) ? `${k}_idle` : null;
       case 'walk':   return this.spriteAnims.has(`${k}_walk`) ? `${k}_walk` : null;
       case 'jump':
         if (this.vy <= 0 && this.spriteAnims.has(`${k}_jump_rise`)) return `${k}_jump_rise`;
