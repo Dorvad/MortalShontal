@@ -12,7 +12,6 @@ export class MainMenuScene extends Phaser.Scene {
 
     this.buildBackground();
     this.buildHorizonGlow();
-    this.buildCharacters();
     this.buildLogoGlow();
     this.buildLogo();
     this.buildMenu();
@@ -60,45 +59,6 @@ export class MainMenuScene extends Phaser.Scene {
 
     this.textures.addCanvas('menu_horizon_glow', canvas);
     this.add.image(0, 0, 'menu_horizon_glow').setOrigin(0, 0).setDepth(2);
-  }
-
-  private buildCharacters(): void {
-    const SPLASH_RATIO = 1086 / 1448; // portrait w/h
-
-    const aravaKey = this.textures.exists('splash_arava') ? 'splash_arava' : 'card_arava';
-    const tomerKey = this.textures.exists('splash_tomer') ? 'splash_tomer' : 'card_tomer';
-
-    // Tomer — left side, dark green tint
-    const tomerH = GAME_HEIGHT * 0.78;
-    const tomerImg = this.add.image(GAME_WIDTH * 0.11, GAME_HEIGHT * 1.02, tomerKey)
-      .setOrigin(0.5, 1)
-      .setDisplaySize(tomerH * SPLASH_RATIO, tomerH)
-      .setFlipX(true)
-      .setTint(0x061408)
-      .setAlpha(0)
-      .setDepth(3);
-
-    // Arava — right side, dark orange tint
-    const aravaH = GAME_HEIGHT * 0.75;
-    const aravaImg = this.add.image(GAME_WIDTH * 0.89, GAME_HEIGHT * 1.02, aravaKey)
-      .setOrigin(0.5, 1)
-      .setDisplaySize(aravaH * SPLASH_RATIO, aravaH)
-      .setTint(0x180802)
-      .setAlpha(0)
-      .setDepth(3);
-
-    // Slide up and fade in
-    this.tweens.add({ targets: tomerImg, y: GAME_HEIGHT, alpha: 0.60, duration: 800, delay: 200, ease: 'Cubic.easeOut' });
-    this.tweens.add({ targets: aravaImg, y: GAME_HEIGHT, alpha: 0.55, duration: 800, delay: 350, ease: 'Cubic.easeOut' });
-
-    // Inner-edge color bleed — gives them a colored aura on the inside edge
-    const bleedL = this.add.graphics().setDepth(4);
-    bleedL.fillGradientStyle(0x1a4010, 0x1a4010, 0x1a4010, 0x1a4010, 0.22, 0, 0.22, 0);
-    bleedL.fillRect(0, GAME_HEIGHT * 0.25, GAME_WIDTH * 0.22, GAME_HEIGHT * 0.75);
-
-    const bleedR = this.add.graphics().setDepth(4);
-    bleedR.fillGradientStyle(0x3a1808, 0x3a1808, 0x3a1808, 0x3a1808, 0, 0.18, 0, 0.18);
-    bleedR.fillRect(GAME_WIDTH * 0.78, GAME_HEIGHT * 0.25, GAME_WIDTH * 0.22, GAME_HEIGHT * 0.75);
   }
 
   private buildLogoGlow(): void {
