@@ -62,6 +62,7 @@ export class Fighter {
   private currentAttack: AttackData | null = null;
   private attackPhaseName: 'startup' | 'active' | 'recovery' | null = null;
   private hasSpawnedProjectile = false;
+  private ranHeavyHold = false;  // true if hold was triggered at any point this attack
 
   // Game-feel timers (in frames)
   private freezeFrames = 0;
@@ -167,22 +168,34 @@ export class Fighter {
     // Heavy attack: N-frame spritesheet; first 2 = startup, middle = active, last = recovery
     if (this.scene.textures.exists(`${k}_heavy`)) {
       const heavyAnimKey = `${k}_heavy_attack`;
+      const heavyHoldKey = `${k}_heavy_hold`;
+      const heavyAtk   = this.data.attacks['heavy'];
+      const N          = this.scene.textures.get(`${k}_heavy`).frameTotal - 1; // subtract __BASE
+      const nStartup   = Math.min(2, N - 2);
+      const nActive    = Math.max(1, N - nStartup - 1);
       if (!this.scene.anims.exists(heavyAnimKey)) {
-        const heavyAtk   = this.data.attacks['heavy'];
-        const N = this.scene.textures.get(`${k}_heavy`).frameTotal - 1; // subtract __BASE
-        const nStartup  = Math.min(2, N - 2);
-        const nActive   = Math.max(1, N - nStartup - 1);
-        const startupMs = heavyAtk ? Math.round(heavyAtk.startup  * 1000 / FPS / Math.max(1, nStartup)) : 100;
-        const activeMs  = heavyAtk ? Math.round(heavyAtk.active   * 1000 / FPS / nActive)               : 33;
-        const recoveryMs = heavyAtk ? Math.round(heavyAtk.recovery * 1000 / FPS)                        : 367;
+        const startupMs  = heavyAtk ? Math.round(heavyAtk.startup  * 1000 / FPS / Math.max(1, nStartup)) : 100;
+        const activeMs   = heavyAtk ? Math.round(heavyAtk.active   * 1000 / FPS / nActive)               : 33;
+        const recoveryMs = heavyAtk ? Math.round(heavyAtk.recovery * 1000 / FPS)                         : 367;
         const frameList: { key: string; frame: number; duration: number }[] = [];
         for (let i = 0; i < N; i++) {
           const ms = i < nStartup ? startupMs : i < nStartup + nActive ? activeMs : recoveryMs;
           frameList.push({ key: `${k}_heavy`, frame: i, duration: ms });
         }
         this.scene.anims.create({ key: heavyAnimKey, frames: frameList, repeat: 0 });
+        // Looping cloud variant: only active frames, repeats indefinitely while button held
+        if (heavyAtk?.holdable) {
+          this.scene.anims.create({
+            key:    heavyHoldKey,
+            frames: frameList.slice(nStartup, nStartup + nActive),
+            repeat: -1,
+          });
+        }
       }
       this.spriteAnims.add(heavyAnimKey);
+      if (heavyAtk?.holdable && this.scene.anims.exists(heavyHoldKey)) {
+        this.spriteAnims.add(heavyHoldKey);
+      }
     }
 
     // Texture filtering: LINEAR for high-res downscaled art, NEAREST for pixel art upscaled
@@ -243,8 +256,12 @@ export class Fighter {
         if (this.currentAttack?.id === 'light' && this.spriteAnims.has(`${k}_light_attack`)) {
           return `${k}_light_attack`;
         }
-        if (this.currentAttack?.id === 'heavy' && this.spriteAnims.has(`${k}_heavy_attack`)) {
-          return `${k}_heavy_attack`;
+        if (this.currentAttack?.id === 'heavy') {
+          // After startup: use the looping cloud anim when hold was triggered (active + recovery)
+          if (this.attackPhaseName !== 'startup' && this.ranHeavyHold && this.spriteAnims.has(`${k}_heavy_hold`)) {
+            return `${k}_heavy_hold`;
+          }
+          if (this.spriteAnims.has(`${k}_heavy_attack`)) return `${k}_heavy_attack`;
         }
         return null;
       default:
@@ -387,6 +404,11 @@ export class Fighter {
         }
       } else {
         this.hitbox.active = true;
+        // Hold mechanic: while the button stays held, prevent the timer from entering recovery
+        if (atk.holdable && input.heavyAttack) {
+          this.ranHeavyHold = true;
+          this.stateTimer = Math.max(this.stateTimer, atk.recovery + 1);
+        }
       }
     } else {
       this.attackPhaseName = 'recovery';
@@ -398,10 +420,9 @@ export class Fighter {
       this.hitbox.hitTargets.clear();
       this.currentAttack = null;
       this.attackPhaseName = null;
+      this.ranHeavyHold = false;
       this.setState('idle');
     }
-
-    void input;
   }
 
   private updateBlock(input: InputState): void {
@@ -435,6 +456,7 @@ export class Fighter {
 
     this.currentAttack         = atk;
     this.hasSpawnedProjectile  = false;
+    this.ranHeavyHold          = false;
     this.hitbox.attackId       = atk.id;
     this.hitbox.damage         = atk.damage;
     this.hitbox.knockbackX     = atk.knockbackX;

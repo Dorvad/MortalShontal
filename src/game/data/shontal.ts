@@ -37,7 +37,7 @@ export const shontalData: FighterData = {
       recovery: 9,
       hitboxOffset: { x: 44, y: -60, w: 68, h: 38 },
     },
-    // Long-range vape cloud: wide hitbox covers ~half the stage from the character
+    // Long-range vape cloud: hold button to keep blowing continuously
     heavy: {
       id: 'heavy',
       damage: 26,
@@ -49,10 +49,15 @@ export const shontalData: FighterData = {
       active: 8,
       recovery: 28,
       hitboxOffset: { x: 48, y: -82, w: 500, h: 90 },
+      holdable: true,
     },
   },
   spriteKey: 'shontal',
   spriteDisplayHeight: 208,
+  spriteDisplayHeightOverrides: {
+    'shontal_heavy_attack': 340,  // scale up so the vape cloud fills more of the screen
+    'shontal_heavy_hold':   340,  // same scale for the looping hold variant
+  },
   spriteFilter: 'linear',
   animFrames: {
     idle:      { start: 0, end: 5, frameRate: 7,  repeat: -1 },

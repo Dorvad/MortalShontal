@@ -24,4 +24,5 @@ export interface AttackData {
   recovery: number;      // frames after active before idle
   hitboxOffset: Rect;    // relative to fighter origin (ignored for projectile attacks)
   projectile?: ProjectileConfig; // present → attack spawns a flying projectile
+  holdable?: boolean;   // if true, active phase extends while the attack button stays held
 }
