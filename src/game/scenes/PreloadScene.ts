@@ -99,6 +99,10 @@ export class PreloadScene extends Phaser.Scene {
     this.load.spritesheet('shontal_jump', 'assets/fighters/shontal/shontal_jump.png', {
       frameWidth: 512, frameHeight: 512,
     });
+    // heavy — 2560×512, 5 frames × 512×512 (frames 0-1 startup, 2-3 active, 4 recovery)
+    this.load.spritesheet('shontal_heavy', 'assets/fighters/shontal/shontal_heavy.png', {
+      frameWidth: 512, frameHeight: 512,
+    });
     this.load.image('shontal_light1',  'assets/fighters/shontal/shontal_light1.png');
     this.load.image('shontal_light2',  'assets/fighters/shontal/shontal_light2.png');
     this.load.image('shontal_block',   'assets/fighters/shontal/shontal_block.png');

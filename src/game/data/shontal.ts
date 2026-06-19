@@ -5,6 +5,7 @@ import { FighterData } from '../fighters/FighterData';
 //   shontal_idle.png   — 3072×512, 6 frames × 512×512
 //   shontal_walk.png   — 3072×512, 6 frames × 512×512
 //   shontal_jump.png   — 3072×512, 6 frames × 512×512  (frames 0-2 rise, 3-5 fall)
+//   shontal_heavy.png  — 2560×512, 5 frames × 512×512  (2 startup, 2 active, 1 recovery)
 // Single images: shontal_light1, shontal_light2, shontal_block, shontal_hitstun
 
 export const shontalData: FighterData = {
@@ -36,17 +37,18 @@ export const shontalData: FighterData = {
       recovery: 9,
       hitboxOffset: { x: 44, y: -60, w: 68, h: 38 },
     },
+    // Long-range vape cloud: wide hitbox covers ~half the stage from the character
     heavy: {
       id: 'heavy',
-      damage: 22,
-      knockbackX: 410,
-      knockbackY: -150,
-      hitstun: 27,
-      blockstun: 15,
-      startup: 13,
-      active: 6,
-      recovery: 23,
-      hitboxOffset: { x: 38, y: -68, w: 92, h: 54 },
+      damage: 26,
+      knockbackX: 460,
+      knockbackY: -120,
+      hitstun: 30,
+      blockstun: 16,
+      startup: 15,
+      active: 8,
+      recovery: 28,
+      hitboxOffset: { x: 48, y: -82, w: 500, h: 90 },
     },
   },
   spriteKey: 'shontal',
