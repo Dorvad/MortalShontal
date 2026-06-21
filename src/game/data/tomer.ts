@@ -73,7 +73,7 @@ export const tomerData: FighterData = {
   },
   spriteFilter: 'linear',
   animFrames: {
-    idle:      { start: 0, end: 3, frameRate: 7,  repeat: -1 },
+    idle:      { start: 0, end: 3, frameRate: 9,  repeat: -1 },
     walk:      { start: 0, end: 4, frameRate: 10, repeat: -1 },
     jump_rise: { start: 0, end: 1, frameRate: 10, repeat: 0  },  // frames 0-1: takeoff → airborne
     jump_fall: { start: 2, end: 2, frameRate: 10, repeat: -1 },  // frame 2: fall/landing hold

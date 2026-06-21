@@ -64,6 +64,10 @@ export class Fighter {
   private hasSpawnedProjectile = false;
   private ranHeavyHold = false;  // true if hold was triggered at any point this attack
 
+  // Smoothed visual state — lerped each render frame to avoid position/scale snaps
+  private smoothOffsetX   = 0;  // lerped horizontal anchor correction (game px)
+  private smoothScaleBase = 0;  // lerped target sprite scale (0 = uninitialised → snap on first frame)
+
   // Game-feel timers (in frames)
   private freezeFrames = 0;
   private hitFlashTimer = 0;
@@ -524,41 +528,54 @@ export class Fighter {
   }
 
   // Sprite visual update: position, animation, scale, tint.
+  // Uses lerp on both horizontal offset and scale to eliminate per-frame snapping.
   private syncSpriteVisuals(spr: Phaser.GameObjects.Sprite, animKey: string, dtFrames: number): void {
     spr.setPosition(this.x, this.y).setVisible(true);
 
-    // Per-frame horizontal anchor compensation — counters position drift in the spritesheet.
-    // Offsets are stored in source pixels and scaled by the current sprite scale.
-    const frameOffsets = this.data.spriteFrameOffsets?.[animKey];
-    if (frameOffsets) {
-      const texFrame = spr.anims.currentFrame?.textureFrame as number | undefined ?? 0;
-      const rawOffset = frameOffsets[texFrame] ?? 0;
-      spr.x += rawOffset * spr.scale * this.facing;
-    }
+    // ── Switch animation first so currentFrame reflects the new anim ──────────
+    const keyChanged = spr.anims.currentAnim?.key !== animKey;
+    if (keyChanged) spr.play(animKey, false);
 
-    // Play animation — ignoreIfPlaying=true avoids restarting the same anim each frame;
-    // false forces an immediate switch when the desired anim changes (e.g. rise → fall).
-    const currentKey = spr.anims.currentAnim?.key;
-    if (currentKey !== animKey) {
-      spr.play(animKey, false);
-    }
-
-    // Scale: uniform so the sprite renders at spriteDisplayHeight game-pixels tall.
-    const targetH = this.data.spriteDisplayHeightOverrides?.[animKey]
+    // ── Scale (lerped) ────────────────────────────────────────────────────────
+    // targetH only changes when animKey changes (state transitions).
+    // Lerping smooths sudden size jumps (e.g. Shontal 208→340 on heavy attack).
+    const targetH     = this.data.spriteDisplayHeightOverrides?.[animKey]
       ?? this.data.spriteDisplayHeight ?? 110;
-    const scale   = targetH / spr.frame.realHeight;
+    if (this.smoothScaleBase === 0) {
+      this.smoothScaleBase = targetH;  // snap on first frame to avoid zooming from 0
+    } else {
+      const SCALE_K = 0.25;
+      this.smoothScaleBase += Math.min(1, dtFrames * SCALE_K) * (targetH - this.smoothScaleBase);
+    }
+    const displayScale = this.smoothScaleBase / spr.frame.realHeight;
 
-    // Landing squash-and-stretch
+    // ── Horizontal anchor compensation (lerped) ───────────────────────────────
+    // rawOffset is in source pixels; convert to game px with displayScale.
+    // When the animation key changes, snap immediately so the character doesn't
+    // slide sideways from the previous state's offset position.
+    const frameOffsets  = this.data.spriteFrameOffsets?.[animKey];
+    const texFrame      = spr.anims.currentFrame?.textureFrame as number | undefined ?? 0;
+    const rawOffset     = frameOffsets ? (frameOffsets[texFrame] ?? 0) : 0;
+    const targetOffsetX = rawOffset * displayScale * this.facing;
+    if (keyChanged) {
+      this.smoothOffsetX = targetOffsetX;
+    } else {
+      const OFFSET_K = 0.35;
+      this.smoothOffsetX += Math.min(1, dtFrames * OFFSET_K) * (targetOffsetX - this.smoothOffsetX);
+    }
+    spr.x += this.smoothOffsetX;
+
+    // ── Landing squash-and-stretch (composes with lerped scale) ──────────────
     if (this.landingSquash > 0) {
       const t = this.landingSquash / 5;
-      spr.setScale(scale * (1 + 0.12 * t), scale * (1 - 0.12 * t));
+      spr.setScale(displayScale * (1 + 0.12 * t), displayScale * (1 - 0.12 * t));
       this.landingSquash = Math.max(0, this.landingSquash - dtFrames);
     } else {
-      spr.setScale(scale);
+      spr.setScale(displayScale);
     }
     spr.setFlipX(this.facing === -1);
 
-    // Hit / block tint feedback
+    // ── Hit / block tint feedback ─────────────────────────────────────────────
     if (this.hitFlashTimer > 0) {
       spr.setTint(0xffffff).setAlpha(1);
       this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dtFrames);

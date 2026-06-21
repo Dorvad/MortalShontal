@@ -76,7 +76,7 @@ export const nahoraiData: FighterData = {
   spriteFilter: 'linear',
   animFrames: {
     // Idle — use frames 0-3 only; frames 4-5 have severe drift / direction issues
-    idle:         { start: 0, end: 3, frames: [0, 1, 2, 3], frameRate: 8,  repeat: -1 },
+    idle:         { start: 0, end: 3, frames: [0, 1, 2, 3], frameRate: 9,  repeat: -1 },
     // Walk — frames 0-2 are the right-facing phase; 3-5 appear to be the return phase
     // of a bidirectional cycle and face the wrong direction
     walk:         { start: 0, end: 2, frames: [0, 1, 2],    frameRate: 10, repeat: -1 },
@@ -94,7 +94,7 @@ export const nahoraiData: FighterData = {
   // Positive = shift right; negative = shift left.
   // Tune these in-game (they scale with spriteDisplayHeight automatically).
   spriteFrameOffsets: {
-    nahorai_idle: [-12, 6, 28, 42],
+    nahorai_idle: [-6, 3, 14, 21],   // halved — lerp covers the rest
     nahorai_walk: [7, -7, 24],
   },
 };
