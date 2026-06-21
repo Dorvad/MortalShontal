@@ -55,8 +55,8 @@ export const shontalData: FighterData = {
   spriteKey: 'shontal',
   spriteDisplayHeight: 208,
   spriteDisplayHeightOverrides: {
-    'shontal_heavy_attack': 340,  // scale up so the vape cloud fills more of the screen
-    'shontal_heavy_hold':   340,  // same scale for the looping hold variant
+    'shontal_heavy_attack': 260,  // vape cloud — larger than idle (208) but not absurdly so
+    'shontal_heavy_hold':   260,  // same scale for the looping hold variant
   },
   spriteFilter: 'linear',
   animFrames: {

@@ -64,9 +64,8 @@ export class Fighter {
   private hasSpawnedProjectile = false;
   private ranHeavyHold = false;  // true if hold was triggered at any point this attack
 
-  // Smoothed visual state — lerped each render frame to avoid position/scale snaps
-  private smoothOffsetX   = 0;  // lerped horizontal anchor correction (game px)
-  private smoothScaleBase = 0;  // lerped target sprite scale (0 = uninitialised → snap on first frame)
+  // Smoothed visual state — lerped each render frame to avoid position snaps
+  private smoothOffsetX = 0;  // lerped horizontal anchor correction (game px)
 
   // Game-feel timers (in frames)
   private freezeFrames = 0;
@@ -536,18 +535,10 @@ export class Fighter {
     const keyChanged = spr.anims.currentAnim?.key !== animKey;
     if (keyChanged) spr.play(animKey, false);
 
-    // ── Scale (lerped) ────────────────────────────────────────────────────────
-    // targetH only changes when animKey changes (state transitions).
-    // Lerping smooths sudden size jumps (e.g. Shontal 208→340 on heavy attack).
-    const targetH     = this.data.spriteDisplayHeightOverrides?.[animKey]
+    // ── Scale (instant) ───────────────────────────────────────────────────────
+    const targetH      = this.data.spriteDisplayHeightOverrides?.[animKey]
       ?? this.data.spriteDisplayHeight ?? 110;
-    if (this.smoothScaleBase === 0) {
-      this.smoothScaleBase = targetH;  // snap on first frame to avoid zooming from 0
-    } else {
-      const SCALE_K = 0.25;
-      this.smoothScaleBase += Math.min(1, dtFrames * SCALE_K) * (targetH - this.smoothScaleBase);
-    }
-    const displayScale = this.smoothScaleBase / spr.frame.realHeight;
+    const displayScale = targetH / spr.frame.realHeight;
 
     // ── Horizontal anchor compensation (lerped) ───────────────────────────────
     // rawOffset is in source pixels; convert to game px with displayScale.
@@ -560,7 +551,7 @@ export class Fighter {
     if (keyChanged) {
       this.smoothOffsetX = targetOffsetX;
     } else {
-      const OFFSET_K = 0.35;
+      const OFFSET_K = 0.6;
       this.smoothOffsetX += Math.min(1, dtFrames * OFFSET_K) * (targetOffsetX - this.smoothOffsetX);
     }
     spr.x += this.smoothOffsetX;
