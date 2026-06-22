@@ -64,6 +64,8 @@ export class Fighter {
   private hasSpawnedProjectile = false;
   private ranHeavyHold = false;  // true if hold was triggered at any point this attack
 
+  get currentAttackId(): string | null { return this.currentAttack?.id ?? null; }
+
   // Smoothed visual state — lerped each render frame to avoid position snaps
   private smoothOffsetX = 0;  // lerped horizontal anchor correction (game px)
 
@@ -552,9 +554,14 @@ export class Fighter {
       this.smoothOffsetX = targetOffsetX;
     } else {
       const OFFSET_K = 0.6;
-      this.smoothOffsetX += Math.min(1, dtFrames * OFFSET_K) * (targetOffsetX - this.smoothOffsetX);
+      const offsetDiff = targetOffsetX - this.smoothOffsetX;
+      if (Math.abs(offsetDiff) < 0.4) {
+        this.smoothOffsetX = targetOffsetX;  // snap tiny residuals → no infinite sub-pixel oscillation
+      } else {
+        this.smoothOffsetX += Math.min(1, dtFrames * OFFSET_K) * offsetDiff;
+      }
     }
-    spr.x += this.smoothOffsetX;
+    spr.x = Math.round(spr.x + this.smoothOffsetX);  // integer pixels → eliminates WebGL sub-pixel shimmer
 
     // ── Landing squash-and-stretch (composes with lerped scale) ──────────────
     if (this.landingSquash > 0) {

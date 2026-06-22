@@ -140,6 +140,26 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('tomer_light2',  'assets/fighters/tomer/tomer_light2.png');
     // hitstun — 256×256, single image
     this.load.image('tomer_hitstun', 'assets/fighters/tomer/tomer_hitstun.png');
+    // ── Combat VFX sprite sheets ──────────────────────────────────────────────
+    // hit_light.png — 1774×887, 5 frames (frameW = floor(1774/5) = 354)
+    this.load.spritesheet('hit_light', 'assets/effects/hit_light.png', {
+      frameWidth: 354, frameHeight: 887,
+    });
+    // hit_heavy.png — 1773×887, 6 frames (frameW = floor(1773/6) = 295)
+    this.load.spritesheet('hit_heavy', 'assets/effects/hit_heavy.png', {
+      frameWidth: 295, frameHeight: 887,
+    });
+
+    // ── SFX ───────────────────────────────────────────────────────────────────
+    const sfxPath = 'assets/audio/sfx/';
+    this.load.audio('sfx_punch_1',     sfxPath + 'punch_1.wav');
+    this.load.audio('sfx_punch_2',     sfxPath + 'punch_2.wav');
+    this.load.audio('sfx_punch_3',     sfxPath + 'punch_3.mp3');
+    this.load.audio('sfx_punch_4',     sfxPath + 'punch_4.mp3');
+    this.load.audio('sfx_block',       sfxPath + 'punch_block.wav');
+    this.load.audio('sfx_arava_heavy', sfxPath + 'arava_heavy.mp3');
+    this.load.audio('sfx_tomer_throw', sfxPath + 'tomer_throw.mp3');
+
     const ctrlPath = 'assets/ui/controls/';
     this.load.image('ctrl_btn',           ctrlPath + 'button_circle.png');
     this.load.image('ctrl_btn_hl',        ctrlPath + 'button_circle_highlight.png');

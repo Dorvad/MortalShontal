@@ -81,7 +81,7 @@ export const tomerData: FighterData = {
   // Per-frame x-offset compensation (source pixels). Target centre = 256/2 = 128 px for 256px frames.
   // For 192px frames target centre = 96 px. Positive = shift right; negative = shift left.
   spriteFrameOffsets: {
-    tomer_idle:         [ 6,  6,  1,  0],
+    tomer_idle:         [ 3,  3,  0,  0],
     tomer_walk:         [ 7,  0, -8, -9,  2],
     tomer_heavy_attack: [-3, -5,  4,  6,  8],
     tomer_light_attack: [ 7,  3],

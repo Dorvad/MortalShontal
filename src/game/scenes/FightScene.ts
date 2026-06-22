@@ -43,6 +43,9 @@ export class FightScene extends Phaser.Scene {
   private playerPrevState = 'idle';
   private enemyPrevState  = 'idle';
 
+  private readonly PUNCH_KEYS = ['sfx_punch_1', 'sfx_punch_2', 'sfx_punch_3', 'sfx_punch_4'];
+  private nextPunchIdx = 0;
+
   constructor() { super(SCENES.FIGHT); }
 
   create(): void {
@@ -50,6 +53,9 @@ export class FightScene extends Phaser.Scene {
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
     this.buildStage();
+
+    this.registerHitAnim('hit_light', 4, 18);  // 5 frames at 18 fps ≈ 278 ms
+    this.registerHitAnim('hit_heavy', 5, 16);  // 6 frames at 16 fps ≈ 375 ms
 
     const roster: Record<string, import('../fighters/FighterData').FighterData> = {
       nahorai: nahoraiData, arava: aravaData, tomer: tomerData, shontal: shontalData,
@@ -90,6 +96,7 @@ export class FightScene extends Phaser.Scene {
 
     this.events.on('projectileSpawn', (data: ProjectileSpawnData) => {
       this.projectiles.push(new Projectile(this, data));
+      SoundManager.play(this, 'sfx_tomer_throw', 0.65);
     });
 
     // Defer roundStart by one tick so UIScene (launched in the same scene-queue
@@ -97,6 +104,11 @@ export class FightScene extends Phaser.Scene {
     this.time.delayedCall(0, () => this.events.emit('roundStart'));
 
     SoundManager.play(this, 'bgm_fight');
+  }
+
+  private registerHitAnim(key: string, endFrame: number, frameRate: number): void {
+    if (!this.textures.exists(key) || this.anims.exists(key)) return;
+    this.anims.create({ key, frames: this.anims.generateFrameNumbers(key, { start: 0, end: endFrame }), frameRate, repeat: 0 });
   }
 
   private buildStage(): void {
@@ -183,6 +195,16 @@ export class FightScene extends Phaser.Scene {
     }
     this.playerPrevState = this.player.state;
     this.enemyPrevState  = this.enemy.state;
+
+    // Arava heavy SFX — fires once when attack starts
+    if (prevPlayerState !== 'attack' && this.player.state === 'attack'
+        && this.player.data.id === 'arava' && this.player.currentAttackId === 'heavy') {
+      SoundManager.play(this, 'sfx_arava_heavy', 0.7);
+    }
+    if (prevEnemyState !== 'attack' && this.enemy.state === 'attack'
+        && this.enemy.data.id === 'arava' && this.enemy.currentAttackId === 'heavy') {
+      SoundManager.play(this, 'sfx_arava_heavy', 0.7);
+    }
 
     // Face each other (only when not committed to an attack)
     this.faceOpponent(this.player, this.enemy);
@@ -272,7 +294,10 @@ export class FightScene extends Phaser.Scene {
     const hitstop = isHeavy ? HITSTOP_HEAVY : HITSTOP_LIGHT;
     this.player.freeze(hitstop);
     this.enemy.freeze(hitstop);
-    SoundManager.play(this, isHeavy ? 'sfx_hit_heavy' : 'sfx_hit_light');
+
+    // Round-robin punch SFX
+    SoundManager.play(this, this.PUNCH_KEYS[this.nextPunchIdx]);
+    this.nextPunchIdx = (this.nextPunchIdx + 1) % this.PUNCH_KEYS.length;
 
     this.cameras.main.shake(isHeavy ? 90 : 40, isHeavy ? 0.007 : 0.003);
 
@@ -290,6 +315,16 @@ export class FightScene extends Phaser.Scene {
         tint: tints,
       });
       this.time.delayedCall(340, () => e.destroy());
+    }
+
+    // Hit-mark animation sprite
+    const animKey = isHeavy ? 'hit_heavy' : 'hit_light';
+    if (this.anims.exists(animKey)) {
+      const vfx = this.add.sprite(hitX, hitY, animKey)
+        .setDepth(11)
+        .setScale(isHeavy ? 0.22 : 0.15)
+        .play(animKey);
+      vfx.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => vfx.destroy());
     }
 
     // Floating damage number — grows with combo for visual escalation
@@ -423,6 +458,7 @@ export class FightScene extends Phaser.Scene {
     this.projectiles       = [];
     this.playerPrevState   = 'idle';
     this.enemyPrevState    = 'idle';
+    this.nextPunchIdx      = 0;
     this.scene.restart();
   }
 }

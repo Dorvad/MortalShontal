@@ -67,7 +67,7 @@ export const shontalData: FighterData = {
     jump_land: { start: 5, end: 5, frameRate: 8,  repeat: 0  },
   },
   spriteFrameOffsets: {
-    shontal_idle:      [ -8,  -5, -15, -18,  -7,  -1],  // halved — lerp covers the rest
+    shontal_idle:      [ -4,  -2,  -7,  -9,  -3,   0],
     shontal_walk:      [-18,  -2, -20, -10,  -8,   4],
     shontal_jump_rise: [ -6,   6,  18],                  // reduced arc
     shontal_jump_fall: [  0,   0,   0,  -5,  18],        // reduced frame-4 snap

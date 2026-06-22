@@ -94,7 +94,7 @@ export const nahoraiData: FighterData = {
   // Positive = shift right; negative = shift left.
   // Tune these in-game (they scale with spriteDisplayHeight automatically).
   spriteFrameOffsets: {
-    nahorai_idle: [-6, 3, 14, 21],   // halved — lerp covers the rest
+    nahorai_idle: [-3, 1, 7, 10],
     nahorai_walk: [7, -7, 24],
   },
 };
