@@ -21,6 +21,12 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image('card_nahorai', 'assets/ui/characters/nahorai_card.png');
     this.load.image('card_shontal', 'assets/ui/characters/shontal_card.png');
 
+    // ── HUD portrait busts (face close-ups for the in-fight avatar boxes) ────
+    this.load.image('portrait_nahorai', 'assets/ui/characters/nahorai_portrait.png');
+    this.load.image('portrait_arava',   'assets/ui/characters/arava_portrait.png');
+    this.load.image('portrait_tomer',   'assets/ui/characters/tomer_portrait.png');
+    this.load.image('portrait_shontal', 'assets/ui/characters/shontal_portrait.png');
+
     // ── Character splash art (full-body portraits for select screen) ──────────
     this.load.image('splash_nahorai', 'assets/ui/characters/nahorai_splash.png');
     this.load.image('splash_tomer',   'assets/ui/characters/tomer_splash.png');

@@ -147,15 +147,34 @@ export class UIScene extends Phaser.Scene {
 
   private buildAvatar(x: number, y: number, size: number, data: FighterData, flipX: boolean): void {
     const g = this.add.graphics().setScrollFactor(0).setDepth(31);
+
+    // Background tinted to fighter color
     const r   = (data.color >> 16) & 0xff;
     const bgC = r > 0x80 ? 0x2e1414 : 0x16202e;
     g.fillStyle(bgC, 1);
     g.fillRect(x, y, size, size);
-    g.lineStyle(2, 0x0a0a0f, 1);
-    g.strokeRect(x, y, size, size);
 
-    const idleKey = data.spriteKey ? `${data.spriteKey}_idle` : '';
-    if (idleKey && this.textures.exists(idleKey)) {
+    // Portrait or fallback
+    const portraitKey = `portrait_${data.id}`;
+    const idleKey     = data.spriteKey ? `${data.spriteKey}_idle` : '';
+
+    if (this.textures.exists(portraitKey)) {
+      // Portrait: 1254×1254 square — show top-center crop to frame the face.
+      // cropFactor=0.46 means the top 46% of the image (face + shoulders) fills
+      // the full box height; the center strip fills the width.
+      const frame     = this.textures.get(portraitKey).get() as Phaser.Textures.Frame;
+      const cropFactor = 0.46;
+      const scale     = size / (frame.realHeight * cropFactor);
+      const img = this.add.image(x + size / 2, y, portraitKey)
+        .setOrigin(0.5, 0)
+        .setScale(scale)
+        .setFlipX(flipX)
+        .setScrollFactor(0).setDepth(32);
+      const mask = this.make.graphics({ x: 0, y: 0 });
+      mask.fillRect(x, y, size, size);
+      img.setMask(mask.createGeometryMask());
+    } else if (idleKey && this.textures.exists(idleKey)) {
+      // Fallback: scaled idle sprite
       const spr = this.add.sprite(x + size / 2, y + size, idleKey)
         .setOrigin(0.5, 1).setScrollFactor(0).setDepth(32).setFlipX(flipX);
       const targetH = data.spriteDisplayHeight ?? 100;
@@ -167,6 +186,13 @@ export class UIScene extends Phaser.Scene {
       g.fillStyle(data.color, 0.6);
       g.fillRect(x + 6, y + 6, size - 12, size - 12);
     }
+
+    // Border drawn on top
+    g.lineStyle(2, 0x0a0a0f, 1);
+    g.strokeRect(x, y, size, size);
+    // Subtle inner gold accent line
+    g.lineStyle(1, data.color, 0.35);
+    g.strokeRect(x + 2, y + 2, size - 4, size - 4);
   }
 
   update(_time: number, delta: number): void {
