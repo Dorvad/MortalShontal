@@ -40,6 +40,9 @@ export class FightScene extends Phaser.Scene {
   private activeDamageTexts: Phaser.GameObjects.Text[] = [];
   private projectiles:       Projectile[] = [];
 
+  private playerPrevState = 'idle';
+  private enemyPrevState  = 'idle';
+
   constructor() { super(SCENES.FIGHT); }
 
   create(): void {
@@ -82,6 +85,8 @@ export class FightScene extends Phaser.Scene {
     this.timeScale         = 1.0;
     this.activeDamageTexts = [];
     this.projectiles       = [];
+    this.playerPrevState   = 'idle';
+    this.enemyPrevState    = 'idle';
 
     this.events.on('projectileSpawn', (data: ProjectileSpawnData) => {
       this.projectiles.push(new Projectile(this, data));
@@ -163,8 +168,21 @@ export class FightScene extends Phaser.Scene {
       ? this.ai.compute(delta, this.enemy, this.player)
       : emptyInput();
 
+    const prevPlayerState = this.playerPrevState;
+    const prevEnemyState  = this.enemyPrevState;
+
     this.player.update(scaledDelta, input);
     this.enemy.update(scaledDelta, enemyInput);
+
+    // Landing dust — detect jump→idle ground transition
+    if (prevPlayerState === 'jump' && this.player.state === 'idle') {
+      this.spawnLandingDust(this.player.x, this.player.y);
+    }
+    if (prevEnemyState === 'jump' && this.enemy.state === 'idle') {
+      this.spawnLandingDust(this.enemy.x, this.enemy.y);
+    }
+    this.playerPrevState = this.player.state;
+    this.enemyPrevState  = this.enemy.state;
 
     // Face each other (only when not committed to an attack)
     this.faceOpponent(this.player, this.enemy);
@@ -179,7 +197,7 @@ export class FightScene extends Phaser.Scene {
       const e2p = this.combat.resolve(this.enemy, this.player);
 
       if (p2e) {
-        this.applyHitEffects(p2e, this.enemy);
+        this.applyHitEffects(p2e, this.enemy, this.player);
         if (!p2e.wasBlocked) {
           this.comboCount++;
           this.comboTimer = 1200;
@@ -190,7 +208,7 @@ export class FightScene extends Phaser.Scene {
         }
       }
       if (e2p) {
-        this.applyHitEffects(e2p, this.player);
+        this.applyHitEffects(e2p, this.player, this.enemy);
         if (!e2p.wasBlocked) {
           this.comboCount = 0;
           this.events.emit('comboUpdate', 0);
@@ -214,6 +232,10 @@ export class FightScene extends Phaser.Scene {
       this.roundPhase = 'dying';
       this.timeScale  = 0.15;
       const playerWon = this.enemy.health <= 0;
+      // White screen flash on KO
+      const flash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xffffff)
+        .setDepth(45).setScrollFactor(0).setAlpha(0.85);
+      this.tweens.add({ targets: flash, alpha: 0, duration: 380, ease: 'Quad.easeIn', onComplete: () => flash.destroy() });
       this.time.delayedCall(600, () => {
         this.roundPhase = 'ko';
         this.timeScale  = 1.0;
@@ -222,13 +244,28 @@ export class FightScene extends Phaser.Scene {
     }
   }
 
-  private applyHitEffects(result: HitResult, defender: Fighter): void {
-    const isHeavy = result.attackId === 'heavy';
+  private applyHitEffects(result: HitResult, defender: Fighter, attacker: Fighter): void {
+    const isHeavy   = result.attackId === 'heavy';
+    const hitX      = defender.x;
+    const hitY      = defender.y - defender.data.hurtboxH / 2;
+    const sparkKey  = this.textures.exists('spark_px') ? 'spark_px' : null;
 
     if (result.wasBlocked) {
       this.player.freeze(HITSTOP_BLOCKED);
       this.enemy.freeze(HITSTOP_BLOCKED);
       SoundManager.play(this, 'sfx_block');
+      // Blue-white block sparks fanning forward
+      if (sparkKey) {
+        const e = this.add.particles(hitX, hitY, sparkKey, {
+          speed: { min: 40, max: 140 },
+          lifespan: 220,
+          scale: { start: 0.55, end: 0 },
+          quantity: 6,
+          tint: [0xaaddff, 0xffffff, 0x88ccff],
+          angle: { min: 200, max: 340 },
+        });
+        this.time.delayedCall(260, () => e.destroy());
+      }
       return;
     }
 
@@ -237,35 +274,36 @@ export class FightScene extends Phaser.Scene {
     this.enemy.freeze(hitstop);
     SoundManager.play(this, isHeavy ? 'sfx_hit_heavy' : 'sfx_hit_light');
 
-    if (isHeavy) {
-      this.cameras.main.shake(90, 0.007);
-    } else {
-      this.cameras.main.shake(40, 0.003);
-    }
+    this.cameras.main.shake(isHeavy ? 90 : 40, isHeavy ? 0.007 : 0.003);
 
-    // Hit sparks at contact point
-    const hitX = defender.x;
-    const hitY = defender.y - defender.data.hurtboxH / 2;
-    if (this.textures.exists('spark_px')) {
-      const emitter = this.add.particles(hitX, hitY, 'spark_px', {
-        speed: { min: 80, max: 220 },
-        lifespan: 280,
-        scale: { start: 0.6, end: 0 },
-        quantity: isHeavy ? 8 : 4,
-        tint: isHeavy ? [0xffffff, 0xffdd00] : [0xff8800, 0xffaa44],
+    // Hit sparks — attacker's color tints the burst for visual personality
+    if (sparkKey) {
+      const acColor = attacker.data.color;
+      const tints   = isHeavy
+        ? [0xffffff, acColor, 0xffee88]
+        : [acColor, 0xffffff];
+      const e = this.add.particles(hitX, hitY, sparkKey, {
+        speed: { min: 80, max: 240 },
+        lifespan: 300,
+        scale: { start: isHeavy ? 0.9 : 0.6, end: 0 },
+        quantity: isHeavy ? 10 : 5,
+        tint: tints,
       });
-      this.time.delayedCall(300, () => emitter.destroy());
+      this.time.delayedCall(340, () => e.destroy());
     }
 
-    // Floating damage number
-    this.showDamageNumber(hitX, hitY - 20, result.damage);
+    // Floating damage number — grows with combo for visual escalation
+    this.showDamageNumber(hitX, hitY - 20, result.damage, this.comboCount);
   }
 
-  private showDamageNumber(x: number, y: number, dmg: number): void {
+  private showDamageNumber(x: number, y: number, dmg: number, combo: number): void {
     if (this.activeDamageTexts.length >= 3) return;
+    const scale    = Math.min(1 + (combo - 1) * 0.18, 2.2);
+    const fontSize = Math.round(22 * scale);
+    const color    = combo >= 5 ? '#ff4444' : combo >= 3 ? '#ff8800' : '#ffff44';
     const txt = this.add.text(x, y, String(dmg), {
-      fontSize: '22px', fontStyle: 'bold', color: '#ffff44',
-      stroke: '#000000', strokeThickness: 3,
+      fontSize: `${fontSize}px`, fontStyle: 'bold', color,
+      stroke: '#000000', strokeThickness: Math.round(3 * scale),
     }).setDepth(15).setOrigin(0.5);
     this.activeDamageTexts.push(txt);
     this.tweens.add({
@@ -338,9 +376,10 @@ export class FightScene extends Phaser.Scene {
           blockstun:  proj.blockstun,
         });
         if (result !== 'immune') {
+          const projOwner = proj.ownerId === this.player.id ? this.player : this.enemy;
           this.applyHitEffects(
             { wasBlocked: result === 'blocked', attackId: 'heavy', damage: proj.damage },
-            target,
+            target, projOwner,
           );
           // Combo tracking: if the projectile owner is the player
           if (proj.ownerId === this.player.id && result !== 'blocked') {
@@ -352,6 +391,21 @@ export class FightScene extends Phaser.Scene {
         }
       }
     }
+  }
+
+  private spawnLandingDust(x: number, y: number): void {
+    const key = this.textures.exists('circle_px') ? 'circle_px' : 'spark_px';
+    const e = this.add.particles(x, y, key, {
+      speedX: { min: -80, max: 80 },
+      speedY: { min: -30, max: -5 },
+      lifespan: 480,
+      scale:   { start: 1.4, end: 0 },
+      alpha:   { start: 0.45, end: 0 },
+      quantity: 6,
+      tint: [0xd4b896, 0xc8ae82, 0xe0cdb0],
+      gravityY: 80,
+    }).setDepth(4);
+    this.time.delayedCall(520, () => e.destroy());
   }
 
   shutdown(): void {
@@ -367,6 +421,8 @@ export class FightScene extends Phaser.Scene {
     this.comboTimer        = 0;
     this.activeDamageTexts = [];
     this.projectiles       = [];
+    this.playerPrevState   = 'idle';
+    this.enemyPrevState    = 'idle';
     this.scene.restart();
   }
 }

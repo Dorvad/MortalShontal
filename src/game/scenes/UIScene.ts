@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { HealthBar } from '../ui/HealthBar';
-import { SCENES, GAME_WIDTH } from '../utils/constants';
+import { SCENES, GAME_WIDTH, GAME_HEIGHT } from '../utils/constants';
 import { nahoraiData } from '../data/nahorai';
 import { aravaData }   from '../data/arava';
 import { tomerData }   from '../data/tomer';
@@ -31,6 +31,10 @@ export class UIScene extends Phaser.Scene {
 
   private showingBanner  = false;
   private lastTimerValue: number | null = null;
+
+  private criticalVignette?: Phaser.GameObjects.Graphics;
+  private criticalVignetteTween?: Phaser.Tweens.Tween;
+  private criticalActive = false;
 
   constructor() { super({ key: SCENES.UI, active: false }); }
 
@@ -118,12 +122,16 @@ export class UIScene extends Phaser.Scene {
       .on('pointerout',  () => settingsBtn.setAlpha(0.55));
     this.input.keyboard?.addKey('ESC').on('down', () => this.openSettings());
 
+    this.buildCriticalVignette();
+
     // ── FightScene event bridge ───────────────────────────────────────────────
     this.fightScene = this.scene.get(SCENES.FIGHT);
     this.fightScene.events.on('roundStart', () => this.showFight());
     this.fightScene.events.on('healthUpdate', (data: { playerHP: number; enemyHP: number }) => {
       this.playerBar.setValue(data.playerHP);
       this.enemyBar.setValue(data.enemyHP);
+      const pct = data.playerHP / this.playerData.maxHealth;
+      this.setCriticalVignette(pct <= 0.25 && data.playerHP > 0);
     });
     this.fightScene.events.on('timerUpdate', (secs: number | null) => {
       this.lastTimerValue = secs;
@@ -170,7 +178,14 @@ export class UIScene extends Phaser.Scene {
     this.showingBanner = true;
     this.koText
       .setStyle({ fontFamily: '"Press Start 2P", monospace', fontSize: '52px' })
-      .setText('FIGHT!').setColor('#ff3b30').setVisible(true);
+      .setText('FIGHT!').setColor('#ff3b30').setVisible(true)
+      .setScale(0.4);
+    this.tweens.add({
+      targets: this.koText,
+      scaleX: 1, scaleY: 1,
+      duration: 260,
+      ease: 'Back.easeOut',
+    });
     this.time.delayedCall(1300, () => {
       this.koText.setVisible(false);
       this.showingBanner = false;
@@ -191,13 +206,22 @@ export class UIScene extends Phaser.Scene {
 
   private showKO(playerWon: boolean, isTimeout: boolean): void {
     this.showingBanner = true;
+    this.setCriticalVignette(false);
+
     if (isTimeout) {
       this.koText.setStyle({ fontFamily: '"Press Start 2P", monospace', fontSize: '52px' })
-        .setText('TIME!').setColor('#ff9900').setVisible(true);
+        .setText('TIME!').setColor('#ff9900').setVisible(true).setScale(1.6);
     } else {
       this.koText.setStyle({ fontFamily: '"Secular One", "Heebo", sans-serif', fontSize: '88px' })
-        .setText(playerWon ? 'ניצחון!' : 'הפסדת!').setColor('#ffd23f').setVisible(true);
+        .setText(playerWon ? 'ניצחון!' : 'הפסדת!').setColor('#ffd23f').setVisible(true).setScale(1.6);
     }
+    this.tweens.add({
+      targets: this.koText,
+      scaleX: 1, scaleY: 1,
+      duration: 320,
+      ease: 'Back.easeOut',
+    });
+
     this.roundText
       .setText(playerWon ? 'YOU WIN!' : 'YOU LOSE!')
       .setColor(playerWon ? '#00ff88' : '#ff4444').setVisible(true);
@@ -240,11 +264,51 @@ export class UIScene extends Phaser.Scene {
     this.comboText.setVisible(false);
     this.showingBanner  = false;
     this.lastTimerValue = null;
+    this.setCriticalVignette(false);
 
     this.playerBar.setValue(this.playerData.maxHealth);
     this.enemyBar.setValue(this.enemyData.maxHealth);
 
     (this.scene.get(SCENES.FIGHT) as unknown as { restart: () => void }).restart();
     this.cameras.main.fadeIn(400, 0, 0, 0);
+  }
+
+  private buildCriticalVignette(): void {
+    const g   = this.add.graphics().setScrollFactor(0).setDepth(30).setAlpha(0);
+    const col = 0xff1111;
+    const ew  = 110; // edge band width
+    // Four gradient edges — each fades from red at the border to transparent inward
+    g.fillGradientStyle(col, col, col, col, 0.38, 0, 0.38, 0);
+    g.fillRect(0, 0, ew, GAME_HEIGHT);
+    g.fillGradientStyle(col, col, col, col, 0, 0.38, 0, 0.38);
+    g.fillRect(GAME_WIDTH - ew, 0, ew, GAME_HEIGHT);
+    g.fillGradientStyle(col, col, col, col, 0.38, 0.38, 0, 0);
+    g.fillRect(0, 0, GAME_WIDTH, ew);
+    g.fillGradientStyle(col, col, col, col, 0, 0, 0.38, 0.38);
+    g.fillRect(0, GAME_HEIGHT - ew, GAME_WIDTH, ew);
+    this.criticalVignette = g;
+  }
+
+  private setCriticalVignette(active: boolean): void {
+    if (!this.criticalVignette || active === this.criticalActive) return;
+    this.criticalActive = active;
+    this.criticalVignetteTween?.stop();
+    if (active) {
+      this.criticalVignetteTween = this.tweens.add({
+        targets: this.criticalVignette,
+        alpha: { from: 0.5, to: 1.0 },
+        duration: 650,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+      });
+    } else {
+      this.criticalVignetteTween = this.tweens.add({
+        targets: this.criticalVignette,
+        alpha: 0,
+        duration: 300,
+        ease: 'Quad.easeOut',
+      });
+    }
   }
 }

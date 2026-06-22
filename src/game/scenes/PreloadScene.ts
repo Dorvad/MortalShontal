@@ -162,12 +162,19 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Generate a tiny 4×4 white square for hit-spark particles
+    // 4×4 white square — hit sparks
     const g = this.make.graphics({ x: 0, y: 0 }, false);
     g.fillStyle(0xffffff);
     g.fillRect(0, 0, 4, 4);
     g.generateTexture('spark_px', 4, 4);
     g.destroy();
+
+    // 12×12 soft circle — landing dust and block puffs
+    const cg = this.make.graphics({ x: 0, y: 0 }, false);
+    cg.fillStyle(0xffffff);
+    cg.fillCircle(6, 6, 6);
+    cg.generateTexture('circle_px', 12, 12);
+    cg.destroy();
 
     this.scene.start(SCENES.MENU);
   }
