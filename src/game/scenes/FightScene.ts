@@ -103,7 +103,7 @@ export class FightScene extends Phaser.Scene {
     // flush) has time to run create() and register its event listeners first.
     this.time.delayedCall(0, () => this.events.emit('roundStart'));
 
-    SoundManager.play(this, 'bgm_fight');
+    SoundManager.playMusic(this, 'bgm_fight');
   }
 
   private registerHitAnim(key: string, endFrame: number, frameRate: number): void {
