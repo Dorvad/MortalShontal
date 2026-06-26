@@ -30,6 +30,7 @@ export class KeyboardInput {
       jump:         Phaser.Input.Keyboard.JustDown(this.keys.jump),
       lightAttack:  Phaser.Input.Keyboard.JustDown(this.keys.light),
       heavyAttack:  Phaser.Input.Keyboard.JustDown(this.keys.heavy),
+      heavyHeld:    this.keys.heavy.isDown,
       block:        this.keys.block.isDown,
     };
   }

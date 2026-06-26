@@ -202,6 +202,12 @@ export class PreloadScene extends Phaser.Scene {
     cg.generateTexture('circle_px', 12, 12);
     cg.destroy();
 
+    // Crisp downscaled sprites on HiDPI screens
+    for (const key of this.textures.getTextureKeys()) {
+      if (key === '__DEFAULT' || key === '__MISSING' || key === '__WHITE') continue;
+      this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
+
     this.scene.start(SCENES.MENU);
   }
 }

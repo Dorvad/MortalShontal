@@ -66,7 +66,7 @@ export class FightScene extends Phaser.Scene {
     this.player = new Fighter(this, playerData, 320,  1);
     this.enemy  = new Fighter(this, enemyData,  960, -1);
 
-    this.playerInput = new FighterInput(this, true, true);
+    this.playerInput = new FighterInput(this);
     this.ai     = new AIInput();
     this.combat = new CombatResolver();
 

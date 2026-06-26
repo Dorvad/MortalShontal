@@ -4,6 +4,7 @@ export interface InputState {
   jump: boolean;
   lightAttack: boolean;
   heavyAttack: boolean;
+  heavyHeld: boolean;
   block: boolean;
 }
 
@@ -14,6 +15,7 @@ export function emptyInput(): InputState {
     jump: false,
     lightAttack: false,
     heavyAttack: false,
+    heavyHeld: false,
     block: false,
   };
 }

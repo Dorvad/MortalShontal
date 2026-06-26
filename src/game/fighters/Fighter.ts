@@ -67,7 +67,9 @@ export class Fighter {
   get currentAttackId(): string | null { return this.currentAttack?.id ?? null; }
 
   // Smoothed visual state — lerped each render frame to avoid position snaps
-  private smoothOffsetX = 0;  // lerped horizontal anchor correction (game px)
+  private smoothOffsetX = 0;     // lerped horizontal anchor correction (game px)
+  private smoothDisplayScale = 1; // lerped uniform scale to avoid per-frame height pops
+  private animPaused = false;     // tracks hitstop animation freeze
 
   // Game-feel timers (in frames)
   private freezeFrames = 0;
@@ -300,12 +302,15 @@ export class Fighter {
   update(dt: number, input: InputState): void {
     const dtFrames = dt / (1000 / FPS);
 
-    // Hitstop freeze: skip game logic but still render
+    // Hitstop freeze: skip game logic but still render; pause sprite animation
     if (this.freezeFrames > 0) {
       this.freezeFrames = Math.max(0, this.freezeFrames - dtFrames);
+      this.pauseSpriteAnim();
       this.syncVisuals(0);
       return;
     }
+
+    this.resumeSpriteAnim();
 
     this.stateTimer = Math.max(0, this.stateTimer - dtFrames);
 
@@ -410,7 +415,7 @@ export class Fighter {
       } else {
         this.hitbox.active = true;
         // Hold mechanic: while the button stays held, prevent the timer from entering recovery
-        if (atk.holdable && input.heavyAttack) {
+        if (atk.holdable && input.heavyHeld) {
           this.ranHeavyHold = true;
           this.stateTimer = Math.max(this.stateTimer, atk.recovery + 1);
         }
@@ -515,6 +520,18 @@ export class Fighter {
     this.x = Phaser.Math.Clamp(this.x, STAGE_LEFT + halfW, STAGE_RIGHT - halfW);
   }
 
+  private pauseSpriteAnim(): void {
+    if (!this.sprite || this.animPaused) return;
+    this.sprite.anims.pause();
+    this.animPaused = true;
+  }
+
+  private resumeSpriteAnim(): void {
+    if (!this.sprite || !this.animPaused) return;
+    this.sprite.anims.resume();
+    this.animPaused = false;
+  }
+
   private syncVisuals(dtFrames: number): void {
     const animKey = this.getSpriteAnimKey();
     const useSprite = !!this.sprite && !!animKey;
@@ -529,18 +546,39 @@ export class Fighter {
   }
 
   // Sprite visual update: position, animation, scale, tint.
-  // Uses lerp on both horizontal offset and scale to eliminate per-frame snapping.
+  // Uses lerp on horizontal offset and scale to eliminate per-frame snapping.
   private syncSpriteVisuals(spr: Phaser.GameObjects.Sprite, animKey: string, dtFrames: number): void {
     spr.setPosition(this.x, this.y).setVisible(true);
 
     // ── Switch animation first so currentFrame reflects the new anim ──────────
     const keyChanged = spr.anims.currentAnim?.key !== animKey;
-    if (keyChanged) spr.play(animKey, false);
+    if (keyChanged) spr.play(animKey, true);
 
-    // ── Scale (instant) ───────────────────────────────────────────────────────
+    // ── Scale (lerped) ────────────────────────────────────────────────────────
     const targetH      = this.data.spriteDisplayHeightOverrides?.[animKey]
       ?? this.data.spriteDisplayHeight ?? 110;
-    const displayScale = targetH / spr.frame.realHeight;
+    const targetScale  = targetH / spr.frame.realHeight;
+    if (keyChanged) {
+      this.smoothDisplayScale = targetScale;
+    } else {
+      const SCALE_K = 0.45;
+      const scaleDiff = targetScale - this.smoothDisplayScale;
+      if (Math.abs(scaleDiff) < 0.003) {
+        this.smoothDisplayScale = targetScale;
+      } else {
+        this.smoothDisplayScale += Math.min(1, dtFrames * SCALE_K) * scaleDiff;
+      }
+    }
+    const displayScale = this.smoothDisplayScale;
+
+    // ── Walk cycle sync — match footwork speed to actual movement ─────────────
+    if (this.state === 'walk' && animKey.endsWith('_walk')) {
+      const refSpeed = this.data.walkSpeed;
+      const actual   = Math.abs(this.vx);
+      spr.anims.timeScale = refSpeed > 0 ? Phaser.Math.Clamp(actual / refSpeed, 0.65, 1.35) : 1;
+    } else {
+      spr.anims.timeScale = 1;
+    }
 
     // ── Horizontal anchor compensation (lerped) ───────────────────────────────
     // rawOffset is in source pixels; convert to game px with displayScale.
@@ -553,15 +591,15 @@ export class Fighter {
     if (keyChanged) {
       this.smoothOffsetX = targetOffsetX;
     } else {
-      const OFFSET_K = 0.6;
+      const OFFSET_K = 0.42;
       const offsetDiff = targetOffsetX - this.smoothOffsetX;
-      if (Math.abs(offsetDiff) < 0.4) {
-        this.smoothOffsetX = targetOffsetX;  // snap tiny residuals → no infinite sub-pixel oscillation
+      if (Math.abs(offsetDiff) < 0.35) {
+        this.smoothOffsetX = targetOffsetX;
       } else {
         this.smoothOffsetX += Math.min(1, dtFrames * OFFSET_K) * offsetDiff;
       }
     }
-    spr.x = Math.round(spr.x + this.smoothOffsetX);  // integer pixels → eliminates WebGL sub-pixel shimmer
+    spr.x = Math.round(spr.x + this.smoothOffsetX);
 
     // ── Landing squash-and-stretch (composes with lerped scale) ──────────────
     if (this.landingSquash > 0) {

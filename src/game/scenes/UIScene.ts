@@ -7,12 +7,14 @@ import { tomerData }   from '../data/tomer';
 import { shontalData } from '../data/shontal';
 import { GameSettings } from '../GameSettings';
 import { FighterData }  from '../fighters/FighterData';
+import { getUIScale, isTouchPreferred } from '../utils/device';
 
-const BAR_W  = 420;
-const BAR_H  = 26;
-const BAR_Y  = 14;
-const MARGIN = 20;
-const AVATAR = 44;
+const UI_SCALE = getUIScale();
+const BAR_W  = isTouchPreferred() ? 400 : 420;
+const BAR_H  = Math.round(28 * UI_SCALE);
+const BAR_Y  = Math.round(16 * UI_SCALE);
+const MARGIN = Math.round(22 * UI_SCALE);
+const AVATAR = Math.round(48 * UI_SCALE);
 
 export class UIScene extends Phaser.Scene {
   private playerBar!: HealthBar;
@@ -50,7 +52,7 @@ export class UIScene extends Phaser.Scene {
     this.buildAvatar(MARGIN, BAR_Y, AVATAR, this.playerData, false);
     this.add.text(playerBarX, BAR_Y - 1, this.playerData.displayName, {
       fontFamily: '"Secular One", "Heebo", sans-serif',
-      fontSize: '16px', color: '#cfe6ff',
+      fontSize: `${Math.round(16 * UI_SCALE)}px`, color: '#cfe6ff',
       shadow: { color: '#000000', blur: 4, fill: true },
     }).setScrollFactor(0).setDepth(32);
     this.playerBar = new HealthBar(this, playerBarX, BAR_Y + 18, BAR_W, BAR_H, this.playerData.maxHealth, this.playerData.color, false);
@@ -60,7 +62,7 @@ export class UIScene extends Phaser.Scene {
     this.buildAvatar(GAME_WIDTH - MARGIN - AVATAR, BAR_Y, AVATAR, this.enemyData, true);
     this.add.text(enemyBarX, BAR_Y - 1, this.enemyData.displayName, {
       fontFamily: '"Secular One", "Heebo", sans-serif',
-      fontSize: '16px', color: '#ffcece',
+      fontSize: `${Math.round(16 * UI_SCALE)}px`, color: '#ffcece',
       shadow: { color: '#000000', blur: 4, fill: true },
     }).setScrollFactor(0).setDepth(32).setOrigin(1, 0);
     this.enemyBar = new HealthBar(this, enemyBarX, BAR_Y + 18, BAR_W, BAR_H, this.enemyData.maxHealth, this.enemyData.color, true);
@@ -68,7 +70,7 @@ export class UIScene extends Phaser.Scene {
     // ── Centre timer ──────────────────────────────────────────────────────────
     this.roundText = this.add.text(GAME_WIDTH / 2, BAR_Y + BAR_H / 2 + 6, '', {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '32px', color: '#ffffff',
+      fontSize: `${Math.round(32 * UI_SCALE)}px`, color: '#ffffff',
       stroke: '#000000', strokeThickness: 4,
       shadow: { color: 'rgba(255,210,63,.7)', blur: 10, fill: true },
     }).setOrigin(0.5).setScrollFactor(0).setDepth(35).setVisible(false);
@@ -100,26 +102,10 @@ export class UIScene extends Phaser.Scene {
       stroke: '#000000', strokeThickness: 3,
     }).setScrollFactor(0).setDepth(35).setVisible(false).setAngle(-4);
 
-    // ── Fullscreen toggle ─────────────────────────────────────────────────────
-    const fsBtn = this.add.text(GAME_WIDTH - 10, 8, '⛶', {
-      fontSize: '22px', color: '#ffffffaa',
-    })
-      .setOrigin(1, 0).setScrollFactor(0).setDepth(40).setAlpha(0.55)
-      .setInteractive(new Phaser.Geom.Rectangle(-30, -8, 58, 44), Phaser.Geom.Rectangle.Contains)
-      .on('pointerdown', () => this.scale.toggleFullscreen())
-      .on('pointerover', () => fsBtn.setAlpha(1))
-      .on('pointerout',  () => fsBtn.setAlpha(0.55));
+    // ── Fullscreen + Settings buttons (large tap targets on mobile) ─────────────
+    this.buildHudIconButton(GAME_WIDTH - 14, 12, '⛶', () => this.scale.toggleFullscreen());
+    this.buildHudIconButton(GAME_WIDTH - (isTouchPreferred() ? 72 : 52), 12, '⚙', () => this.openSettings());
     this.input.keyboard?.addKey('F').on('down', () => this.scale.toggleFullscreen());
-
-    // ── Settings button ───────────────────────────────────────────────────────
-    const settingsBtn = this.add.text(GAME_WIDTH - 42, 8, '⚙', {
-      fontSize: '20px', color: '#ffffffaa',
-    })
-      .setOrigin(1, 0).setScrollFactor(0).setDepth(40).setAlpha(0.55)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.openSettings())
-      .on('pointerover', () => settingsBtn.setAlpha(1))
-      .on('pointerout',  () => settingsBtn.setAlpha(0.55));
     this.input.keyboard?.addKey('ESC').on('down', () => this.openSettings());
 
     this.buildCriticalVignette();
@@ -145,6 +131,34 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
+  private buildHudIconButton(x: number, y: number, label: string, onPress: () => void): void {
+    const size   = isTouchPreferred() ? 52 : 40;
+    const radius = size / 2;
+    const cx     = x - radius;
+    const cy     = y + radius;
+
+    const bg = this.add.circle(cx, cy, radius, 0x0a0a14, 0.72)
+      .setStrokeStyle(2, 0xffffff, 0.18)
+      .setScrollFactor(0).setDepth(39);
+
+    const txt = this.add.text(cx, cy, label, {
+      fontSize: `${isTouchPreferred() ? 26 : 22}px`,
+      color: '#ffffffcc',
+    })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(40);
+
+    const hit = this.add.circle(cx, cy, radius + 8, 0xffffff, 0)
+      .setScrollFactor(0).setDepth(41)
+      .setInteractive({ useHandCursor: true });
+
+    const highlight = () => { bg.setFillStyle(0x1a1a2e, 0.92); txt.setColor('#ffffff'); };
+    const dim       = () => { bg.setFillStyle(0x0a0a14, 0.72); txt.setColor('#ffffffcc'); };
+
+    hit.on('pointerdown', onPress)
+      .on('pointerover', highlight)
+      .on('pointerout', dim);
+  }
+
   private buildAvatar(x: number, y: number, size: number, data: FighterData, flipX: boolean): void {
     const g = this.add.graphics().setScrollFactor(0).setDepth(31);
 
@@ -159,6 +173,7 @@ export class UIScene extends Phaser.Scene {
     const idleKey     = data.spriteKey ? `${data.spriteKey}_idle` : '';
 
     if (this.textures.exists(portraitKey)) {
+      this.textures.get(portraitKey).setFilter(Phaser.Textures.FilterMode.LINEAR);
       // Portrait: 1254×1254 square — show top-center crop to frame the face.
       // cropFactor=0.46 means the top 46% of the image (face + shoulders) fills
       // the full box height; the center strip fills the width.

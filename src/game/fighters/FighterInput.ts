@@ -1,15 +1,17 @@
 import { InputState, emptyInput } from '../input/InputState';
 import { KeyboardInput } from '../input/KeyboardInput';
 import { TouchControls } from '../input/TouchControls';
+import { isTouchPreferred } from '../utils/device';
 import Phaser from 'phaser';
 
 export class FighterInput {
   private keyboard?: KeyboardInput;
   private touch?: TouchControls;
 
-  constructor(scene: Phaser.Scene, useKeyboard: boolean, useTouch: boolean) {
+  constructor(scene: Phaser.Scene, useKeyboard = true, useTouch?: boolean) {
+    const enableTouch = useTouch ?? isTouchPreferred();
     if (useKeyboard) this.keyboard = new KeyboardInput(scene);
-    if (useTouch)    this.touch    = new TouchControls(scene);
+    if (enableTouch) this.touch    = new TouchControls(scene);
   }
 
   read(): InputState {
@@ -22,6 +24,7 @@ export class FighterInput {
     state.jump        = !!(kb.jump        || tc.jump);
     state.lightAttack = !!(kb.lightAttack || tc.lightAttack);
     state.heavyAttack = !!(kb.heavyAttack || tc.heavyAttack);
+    state.heavyHeld   = !!(kb.heavyHeld   || tc.heavyHeld);
     state.block       = !!(kb.block       || tc.block);
 
     return state;

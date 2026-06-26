@@ -60,8 +60,8 @@ export const shontalData: FighterData = {
   },
   spriteFilter: 'linear',
   animFrames: {
-    idle:      { start: 0, end: 5, frameRate: 9,  repeat: -1 },
-    walk:      { start: 0, end: 5, frameRate: 11, repeat: -1 },
+    idle:      { start: 0, end: 5, frameRate: 10, repeat: -1 },
+    walk:      { start: 0, end: 5, frameRate: 12, repeat: -1 },
     jump_rise: { start: 0, end: 2, frameRate: 10, repeat: 0  },
     jump_fall: { start: 3, end: 4, frameRate: 10, repeat: -1 },
     jump_land: { start: 5, end: 5, frameRate: 8,  repeat: 0  },

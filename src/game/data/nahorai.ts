@@ -76,10 +76,10 @@ export const nahoraiData: FighterData = {
   spriteFilter: 'linear',
   animFrames: {
     // Idle — use frames 0-3 only; frames 4-5 have severe drift / direction issues
-    idle:         { start: 0, end: 3, frames: [0, 1, 2, 3], frameRate: 9,  repeat: -1 },
+    idle:         { start: 0, end: 3, frames: [0, 1, 2, 3], frameRate: 10, repeat: -1 },
     // Walk — frames 0-2 are the right-facing phase; 3-5 appear to be the return phase
     // of a bidirectional cycle and face the wrong direction
-    walk:         { start: 0, end: 2, frames: [0, 1, 2],    frameRate: 10, repeat: -1 },
+    walk:         { start: 0, end: 2, frames: [0, 1, 2],    frameRate: 11, repeat: -1 },
     // Jump — 4 rise frames; fall holds frame 3 (airborne peak)
     jump_rise:    { start: 0, end: 3, frameRate: 10, repeat: 0  },
     jump_fall:    { start: 3, end: 3, frameRate: 10, repeat: -1 },

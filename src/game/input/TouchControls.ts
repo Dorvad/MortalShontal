@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { InputState } from './InputState';
 import { TouchButton } from '../ui/TouchButton';
 import { GAME_WIDTH, GAME_HEIGHT } from '../utils/constants';
+import { getTouchButtonSize, getTouchPad } from '../utils/device';
 
 export class TouchControls {
   private btnLeft: TouchButton;
@@ -12,9 +13,9 @@ export class TouchControls {
   private btnBlock: TouchButton;
 
   constructor(scene: Phaser.Scene) {
-    const pad   = 32;
-    const size  = 118;  // display size for all buttons
-    const gap   = 10;
+    const pad    = getTouchPad();
+    const size   = getTouchButtonSize();
+    const gap    = 12;
     const bottom = GAME_HEIGHT - pad - size / 2;
 
     // Left side: directional buttons + jump above
@@ -37,6 +38,7 @@ export class TouchControls {
       jump:        this.btnJump.takeEdge(),
       lightAttack: this.btnLight.takeEdge(),
       heavyAttack: this.btnHeavy.takeEdge(),
+      heavyHeld:   this.btnHeavy.pressed,
       block:       this.btnBlock.pressed,
     };
   }

@@ -23,12 +23,18 @@ export class TouchButton {
   constructor(cfg: TouchButtonConfig) {
     const { scene, x, y, size, baseKey, highlightKey, iconKey, iconSize } = cfg;
 
+    // Expand hit zone ~18% beyond visual for easier thumb taps
+    const hitPad = Math.round(size * 0.18);
+
     this.base = scene.add.image(x, y, baseKey)
       .setDisplaySize(size, size)
       .setScrollFactor(0)
       .setDepth(10)
-      .setAlpha(0.82)
-      .setInteractive();
+      .setAlpha(0.88)
+      .setInteractive(
+        new Phaser.Geom.Circle(0, 0, size / 2 + hitPad),
+        Phaser.Geom.Circle.Contains,
+      );
 
     this.highlight = scene.add.image(x, y, highlightKey)
       .setDisplaySize(size, size)
@@ -42,7 +48,7 @@ export class TouchButton {
         .setDisplaySize(is, is)
         .setScrollFactor(0)
         .setDepth(12)
-        .setAlpha(0.9);
+        .setAlpha(0.92);
     }
 
     this.base.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
@@ -50,13 +56,15 @@ export class TouchButton {
       this._held = true;
       this._edgeFired = true;
       this.highlight.setVisible(true);
+      this.base.setScale(0.94);
+      this.highlight.setScale(0.94);
+      this.icon?.setScale(0.94);
     });
 
     scene.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
       this.activePointers.delete(ptr.id);
       if (this.activePointers.size === 0) {
-        this._held = false;
-        this.highlight.setVisible(false);
+        this.releaseVisual();
       }
     });
 
@@ -64,11 +72,18 @@ export class TouchButton {
       if (!ptr.isDown) {
         this.activePointers.delete(ptr.id);
         if (this.activePointers.size === 0) {
-          this._held = false;
-          this.highlight.setVisible(false);
+          this.releaseVisual();
         }
       }
     });
+  }
+
+  private releaseVisual(): void {
+    this._held = false;
+    this.highlight.setVisible(false);
+    this.base.setScale(1);
+    this.highlight.setScale(1);
+    this.icon?.setScale(1);
   }
 
   get pressed(): boolean {

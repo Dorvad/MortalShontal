@@ -69,8 +69,8 @@ export const aravaData: FighterData = {
   },
   spriteFilter: 'linear',
   animFrames: {
-    idle:      { start: 0, end: 5, frameRate: 9,  repeat: -1 },  // 6 frames × 192×192
-    walk:      { start: 0, end: 5, frameRate: 12, repeat: -1 },  // 6 frames × 192×192
+    idle:      { start: 0, end: 5, frameRate: 10, repeat: -1 },  // 6 frames × 192×192
+    walk:      { start: 0, end: 5, frameRate: 13, repeat: -1 },  // 6 frames × 192×192
     jump_rise: { start: 0, end: 1, frameRate: 10, repeat: 0  },  // frames 0-1: takeoff → airborne
     jump_fall: { start: 2, end: 2, frameRate: 10, repeat: -1 },  // frame 2: fall/landing hold
     // block/hitstun handled via registerSingle (plain images)
